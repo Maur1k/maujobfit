@@ -136,8 +136,11 @@ function groupSkills(names: string[]) {
     const list = explicit.get(label);
     if (!list?.length) continue;
     const existing = ordered.find((entry) => entry.label.toLowerCase() === label.toLowerCase());
-    if (existing) push(new Map([[existing.label, existing.skills]]), existing.label, list);
-    else ordered.push({ label, skills: list });
+    if (existing) {
+      for (const value of list) if (!existing.skills.includes(value)) existing.skills.push(value);
+    } else {
+      ordered.push({ label, skills: list });
+    }
   }
   if (other.length) ordered.push({ label: ordered.length ? "Additional" : "Skills", skills: other });
   return ordered;
@@ -215,7 +218,9 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
   };
 
   const sectionHeading = (label: string, keepWith = 34) => {
+    if (y > MARGIN_Y + 2) y += 8;
     ensure(20 + keepWith);
+    if (y <= MARGIN_Y + 2) y = MARGIN_Y;
     setFont(9.6, "bold");
     doc.setCharSpace(1.1);
     doc.text(label.toUpperCase(), MARGIN_X, y + 9.6);
