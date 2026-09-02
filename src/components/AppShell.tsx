@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FileStack, FileUp, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { Briefcase, FileStack, FileUp, LayoutDashboard, LogOut, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/master-resume", label: "Master Resume", icon: FileStack },
   { to: "/import", label: "Import PDF", icon: FileUp },
+  { to: "/jobs", label: "Jobs", icon: Briefcase },
   { to: "/profile", label: "Profile", icon: UserRound },
 ] as const;
 

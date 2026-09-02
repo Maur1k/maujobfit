@@ -63,33 +63,42 @@ export type Database = {
       }
       job_requirements: {
         Row: {
+          aliases: string[]
+          canonical_skill: string | null
           created_at: string
           id: string
           importance: string | null
           job_id: string
           keywords: string[]
+          related_skills: string[]
           requirement: string
           requirement_type: string | null
           sort_order: number
           user_id: string
         }
         Insert: {
+          aliases?: string[]
+          canonical_skill?: string | null
           created_at?: string
           id?: string
           importance?: string | null
           job_id: string
           keywords?: string[]
+          related_skills?: string[]
           requirement: string
           requirement_type?: string | null
           sort_order?: number
           user_id: string
         }
         Update: {
+          aliases?: string[]
+          canonical_skill?: string | null
           created_at?: string
           id?: string
           importance?: string | null
           job_id?: string
           keywords?: string[]
+          related_skills?: string[]
           requirement?: string
           requirement_type?: string | null
           sort_order?: number
@@ -107,12 +116,17 @@ export type Database = {
       }
       jobs: {
         Row: {
+          analysis_status: string
           company: string | null
           created_at: string
           description: string | null
           employment_type: string | null
+          error_message: string | null
           id: string
+          keywords: string[]
           location: string | null
+          raw_text: string | null
+          seniority: string | null
           source_url: string | null
           status: string
           title: string
@@ -120,12 +134,17 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analysis_status?: string
           company?: string | null
           created_at?: string
           description?: string | null
           employment_type?: string | null
+          error_message?: string | null
           id?: string
+          keywords?: string[]
           location?: string | null
+          raw_text?: string | null
+          seniority?: string | null
           source_url?: string | null
           status?: string
           title: string
@@ -133,12 +152,17 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analysis_status?: string
           company?: string | null
           created_at?: string
           description?: string | null
           employment_type?: string | null
+          error_message?: string | null
           id?: string
+          keywords?: string[]
           location?: string | null
+          raw_text?: string | null
+          seniority?: string | null
           source_url?: string | null
           status?: string
           title?: string
