@@ -10,7 +10,7 @@ import { analyzeJobDescription } from "@/lib/job-analysis.functions";
 import {
   REQUIREMENT_TYPES,
   analysisStatusLabel,
-  requirementTypeLabel,
+  requirementTypeLabelPlural,
   type JobRequirementRow,
   type JobRow,
 } from "@/lib/job-analysis";
@@ -221,7 +221,7 @@ function JobDetail() {
         return (
           <Card key={type}>
             <CardHeader>
-              <CardTitle>{requirementTypeLabel[type]}s</CardTitle>
+              <CardTitle>{requirementTypeLabelPlural[type]}</CardTitle>
               <CardDescription>
                 {isSkill
                   ? "Normalized to canonical skill names. Related skills are adjacent, not equivalent."

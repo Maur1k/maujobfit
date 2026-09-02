@@ -14,6 +14,13 @@ export const requirementTypeLabel: Record<string, string> = {
   qualification: "Qualification",
 };
 
+export const requirementTypeLabelPlural: Record<string, string> = {
+  required_skill: "Required skills",
+  preferred_skill: "Preferred skills",
+  responsibility: "Responsibilities",
+  qualification: "Qualifications",
+};
+
 export type JobRow = {
   id: string;
   title: string;
