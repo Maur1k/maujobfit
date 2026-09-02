@@ -320,26 +320,21 @@ function TailoredResumePage() {
         })),
       });
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
+      download(blob, fileName);
 
       const { error } = await supabase.from("exports").insert({
         user_id: user!.id,
         tailored_resume_id: resume.id,
         format: "pdf",
         file_name: fileName,
-        status: supportedOnly ? "downloaded_supported_only" : "downloaded_full_draft",
+        status: supportedOnly ? "downloaded_audit_supported_only" : "downloaded_audit_full_draft",
       });
       if (error) throw new Error(error.message);
-      toast.success(`Exported ${visibleItems.length} claims with evidence citations.`);
+      toast.success(`Audit export created for ${visibleItems.length} claims with evidence citations.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
