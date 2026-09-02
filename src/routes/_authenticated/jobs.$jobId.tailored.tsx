@@ -4,16 +4,13 @@ import { useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
-  CheckCircle2,
-  CircleHelp,
+  Download,
   FileCheck2,
   Loader2,
-  Quote,
   RefreshCcw,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
-  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,11 +35,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  StatusIcon,
+  statusBadgeClass,
+  TailoredItemCard,
+  type EvidenceLite,
+} from "@/components/tailored/TailoredItemCard";
+import { buildTailoredResumePdf } from "@/lib/resume-pdf";
 
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/tailored")({
   head: () => ({
@@ -65,38 +66,14 @@ export const Route = createFileRoute("/_authenticated/jobs/$jobId/tailored")({
   component: TailoredResumePage,
 });
 
-type EvidenceLite = {
-  id: string;
-  category: string;
-  title: string | null;
-  organization: string | null;
-  role: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  content: string;
-};
-
-function StatusIcon({ status }: { status: string }) {
-  if (status === "supported")
-    return <CheckCircle2 className="size-4 text-[hsl(var(--evidence))]" aria-hidden />;
-  if (status === "unsupported") return <XCircle className="size-4 text-destructive" aria-hidden />;
-  if (status === "needs_review") return <CircleHelp className="size-4 text-amber-600" aria-hidden />;
-  return <AlertTriangle className="size-4 text-amber-600" aria-hidden />;
-}
-
-function statusBadgeClass(status?: string) {
-  if (status === "supported") return "border-[hsl(var(--evidence))] text-[hsl(var(--evidence))]";
-  if (status === "unsupported") return "border-destructive text-destructive";
-  if (status === "partially_supported" || status === "needs_review") return "border-amber-500 text-amber-600";
-  return "";
-}
-
 function TailoredResumePage() {
   const { jobId } = Route.useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [supportedOnly, setSupportedOnly] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const queryKey = ["tailored-resume", jobId, user?.id];
 
   const dataQuery = useQuery({
@@ -104,6 +81,13 @@ function TailoredResumePage() {
     queryFn: async () => {
       const job = await supabase.from("jobs").select("id, title, company").eq("id", jobId).maybeSingle();
       if (job.error) throw new Error(job.error.message);
+
+      const profile = await supabase
+        .from("profiles")
+        .select("full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url")
+        .eq("id", user!.id)
+        .maybeSingle();
+      if (profile.error) throw new Error(profile.error.message);
 
       const resumes = await supabase
         .from("tailored_resumes")
@@ -118,6 +102,7 @@ function TailoredResumePage() {
       if (!resume) {
         return {
           job: job.data,
+          profile: profile.data,
           resume: null,
           items: [],
           sources: [],
@@ -164,6 +149,7 @@ function TailoredResumePage() {
 
       return {
         job: job.data,
+        profile: profile.data,
         resume,
         items: (items.data ?? []) as TailoredItemRow[],
         sources: scopedSources,
@@ -235,7 +221,7 @@ function TailoredResumePage() {
     );
   }
 
-  const { job, resume, items, sources, evidence, validations } = dataQuery.data;
+  const { job, profile, resume, items, sources, evidence, validations } = dataQuery.data;
   const validationByItem = new Map<string, ValidationRow>();
   for (const row of validations) {
     if (row.tailored_resume_item_id) validationByItem.set(row.tailored_resume_item_id, row);
