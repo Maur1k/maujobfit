@@ -44,6 +44,7 @@ import {
   type EvidenceLite,
 } from "@/components/tailored/TailoredItemCard";
 import { buildTailoredResumePdf } from "@/lib/resume-pdf";
+import { buildProfessionalResumePdf, type ProEvidence } from "@/lib/resume-pdf-professional";
 
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/tailored")({
   head: () => ({
@@ -73,7 +74,7 @@ function TailoredResumePage() {
   const [generating, setGenerating] = useState(false);
   const [validating, setValidating] = useState(false);
   const [supportedOnly, setSupportedOnly] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"professional" | "audit" | null>(null);
   const queryKey = ["tailored-resume", jobId, user?.id];
 
   const dataQuery = useQuery({
@@ -142,7 +143,7 @@ function TailoredResumePage() {
       const evidence = evidenceIds.length
         ? await supabase
             .from("resume_evidence")
-            .select("id, category, title, organization, role, start_date, end_date, content")
+            .select("id, category, title, organization, role, start_date, end_date, content, skills")
             .in("id", evidenceIds)
         : { data: [], error: null };
       if (evidence.error) throw new Error(evidence.error.message);
@@ -239,9 +240,61 @@ function TailoredResumePage() {
     : items;
   const excludedCount = items.length - visibleItems.length;
 
+  const supportedItems = items.filter(
+    (item) => (validationByItem.get(item.id)?.status ?? item.validation_status) === "supported",
+  );
+
+  const download = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportProfessional = async () => {
+    if (!resume) return;
+    setExporting("professional");
+    try {
+      const { blob, fileName } = buildProfessionalResumePdf({
+        profile: profile ?? null,
+        jobTitle: job.title ?? null,
+        version: resume.version,
+        evidence: evidence as unknown as Map<string, ProEvidence>,
+        items: supportedItems.map((item) => ({
+          id: item.id,
+          section: item.section,
+          heading: item.heading,
+          statement: item.statement,
+          evidenceIds: (sourcesByItem.get(item.id) ?? [])
+            .slice()
+            .sort((a, b) => (a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0))
+            .map((source) => source.resume_evidence_id),
+        })),
+      });
+
+      download(blob, fileName);
+
+      const { error } = await supabase.from("exports").insert({
+        user_id: user!.id,
+        tailored_resume_id: resume.id,
+        format: "pdf",
+        file_name: fileName,
+        status: "downloaded_professional_supported_only",
+      });
+      if (error) throw new Error(error.message);
+      toast.success(`Professional resume exported with ${supportedItems.length} supported claims.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const exportPdf = async () => {
     if (!resume) return;
-    setExporting(true);
+    setExporting("audit");
     try {
       const { blob, fileName } = buildTailoredResumePdf({
         profile: profile ?? null,
@@ -267,26 +320,21 @@ function TailoredResumePage() {
         })),
       });
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
+      download(blob, fileName);
 
       const { error } = await supabase.from("exports").insert({
         user_id: user!.id,
         tailored_resume_id: resume.id,
         format: "pdf",
         file_name: fileName,
-        status: supportedOnly ? "downloaded_supported_only" : "downloaded_full_draft",
+        status: supportedOnly ? "downloaded_audit_supported_only" : "downloaded_audit_full_draft",
       });
       if (error) throw new Error(error.message);
-      toast.success(`Exported ${visibleItems.length} claims with evidence citations.`);
+      toast.success(`Audit export created for ${visibleItems.length} claims with evidence citations.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
@@ -436,38 +484,81 @@ function TailoredResumePage() {
                       : `Showing all ${items.length} generated claims, including any that are partially supported, unsupported or awaiting review.`}
                   </CardDescription>
                 </div>
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Switch id="supported-only" checked={supportedOnly} onCheckedChange={setSupportedOnly} />
-                    <Label htmlFor="supported-only" className="text-sm">
-                      Supported only
-                    </Label>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Switch id="supported-only" checked={supportedOnly} onCheckedChange={setSupportedOnly} />
+                  <Label htmlFor="supported-only" className="text-sm">
+                    Supported only
+                  </Label>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-[hsl(var(--evidence))]/50 bg-[hsl(var(--evidence))]/5 p-4">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <FileCheck2 className="size-4 text-[hsl(var(--evidence))]" aria-hidden />
+                    Professional resume — application ready
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Recruiter-facing PDF for JobStreet, LinkedIn and direct applications. Clean single-column
+                    ATS-friendly layout with selectable text. Uses only the {supportedItems.length} claim
+                    {supportedItems.length === 1 ? "" : "s"} validated as <strong>supported</strong> — no evidence IDs,
+                    citations, statuses or internal notes appear anywhere in it.
+                  </p>
                   <Button
-                    variant={supportedOnly ? "default" : "outline"}
-                    disabled={exporting || visibleItems.length === 0}
-                    onClick={() => void exportPdf()}
+                    className="mt-3"
+                    disabled={exporting !== null || supportedItems.length === 0}
+                    onClick={() => void exportProfessional()}
                   >
-                    {exporting ? (
+                    {exporting === "professional" ? (
                       <>
                         <Loader2 className="size-4 animate-spin" aria-hidden />
-                        Exporting…
+                        Building resume…
                       </>
                     ) : (
                       <>
                         <Download className="size-4" aria-hidden />
-                        Export PDF
+                        Download professional resume
+                      </>
+                    )}
+                  </Button>
+                  {supportedItems.length === 0 ? (
+                    <p className="mt-2 text-xs text-amber-600">
+                      No claim is validated as supported yet, so there is nothing application-ready to export. Validate
+                      the resume, then edit or rewrite the flagged claims until they are substantiated.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="rounded-lg border bg-secondary/30 p-4">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <ShieldCheck className="size-4 text-muted-foreground" aria-hidden />
+                    Audit / evidence export — internal review only
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    The citation-rich traceability document: validation status per claim, citation markers and the full
+                    evidence appendix with provenance. Follows the toggle above ({supportedOnly ? "supported only" : "full working draft"},{" "}
+                    {visibleItems.length} claim{visibleItems.length === 1 ? "" : "s"}). Not for sending to employers.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-3"
+                    disabled={exporting !== null || visibleItems.length === 0}
+                    onClick={() => void exportPdf()}
+                  >
+                    {exporting === "audit" ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Exporting audit…
+                      </>
+                    ) : (
+                      <>
+                        <Download className="size-4" aria-hidden />
+                        Download audit / evidence PDF
                       </>
                     )}
                   </Button>
                 </div>
               </div>
-              {supportedOnly && visibleItems.length === 0 ? (
-                <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/5 p-3 text-sm">
-                  No claim is validated as supported yet, so there is nothing to export in this mode. Validate the
-                  resume, then edit or rewrite the flagged claims until they are substantiated.
-                </p>
-              ) : null}
             </CardHeader>
           </Card>
 
