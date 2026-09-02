@@ -261,7 +261,7 @@ function MatchReport() {
               {rows.map((requirement) => {
                 const results = byRequirement.get(requirement.id) ?? [];
                 const first = results[0];
-                const status = ((first?.status ?? "missing") as MatchStatus) ?? "missing";
+                const status = (first?.status ?? "missing") as MatchStatus;
                 const style = statusStyle[status];
                 const Icon = style.icon;
                 return (
