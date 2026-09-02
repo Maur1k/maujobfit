@@ -17,7 +17,7 @@ import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMasterResumeRouteImport } from './routes/_authenticated/master-resume'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs.index'
-import { Route as AuthenticatedJobsJobIdRouteImport } from './routes/_authenticated/jobs.$jobId'
+import { Route as AuthenticatedJobsJobIdIndexRouteImport } from './routes/_authenticated/jobs.$jobId.index'
 import { Route as AuthenticatedJobsJobIdMatchRouteImport } from './routes/_authenticated/jobs.$jobId.match'
 
 const IndexRoute = IndexRouteImport.update({
@@ -60,16 +60,17 @@ const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
   path: '/jobs/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedJobsJobIdRoute = AuthenticatedJobsJobIdRouteImport.update({
-  id: '/jobs/$jobId',
-  path: '/jobs/$jobId',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedJobsJobIdIndexRoute =
+  AuthenticatedJobsJobIdIndexRouteImport.update({
+    id: '/jobs/$jobId/',
+    path: '/jobs/$jobId/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedJobsJobIdMatchRoute =
   AuthenticatedJobsJobIdMatchRouteImport.update({
-    id: '/match',
-    path: '/match',
-    getParentRoute: () => AuthenticatedJobsJobIdRoute,
+    id: '/jobs/$jobId/match',
+    path: '/jobs/$jobId/match',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -79,9 +80,9 @@ export interface FileRoutesByFullPath {
   '/import': typeof AuthenticatedImportRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/jobs/$jobId': typeof AuthenticatedJobsJobIdRouteWithChildren
   '/jobs/': typeof AuthenticatedJobsIndexRoute
   '/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
+  '/jobs/$jobId/': typeof AuthenticatedJobsJobIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,9 +91,9 @@ export interface FileRoutesByTo {
   '/import': typeof AuthenticatedImportRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/jobs/$jobId': typeof AuthenticatedJobsJobIdRouteWithChildren
   '/jobs': typeof AuthenticatedJobsIndexRoute
   '/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
+  '/jobs/$jobId': typeof AuthenticatedJobsJobIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,9 +104,9 @@ export interface FileRoutesById {
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/master-resume': typeof AuthenticatedMasterResumeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/jobs/$jobId': typeof AuthenticatedJobsJobIdRouteWithChildren
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
   '/_authenticated/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
+  '/_authenticated/jobs/$jobId/': typeof AuthenticatedJobsJobIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,9 +117,9 @@ export interface FileRouteTypes {
     | '/import'
     | '/master-resume'
     | '/profile'
-    | '/jobs/$jobId'
     | '/jobs/'
     | '/jobs/$jobId/match'
+    | '/jobs/$jobId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -127,9 +128,9 @@ export interface FileRouteTypes {
     | '/import'
     | '/master-resume'
     | '/profile'
-    | '/jobs/$jobId'
     | '/jobs'
     | '/jobs/$jobId/match'
+    | '/jobs/$jobId'
   id:
     | '__root__'
     | '/'
@@ -139,9 +140,9 @@ export interface FileRouteTypes {
     | '/_authenticated/import'
     | '/_authenticated/master-resume'
     | '/_authenticated/profile'
-    | '/_authenticated/jobs/$jobId'
     | '/_authenticated/jobs/'
     | '/_authenticated/jobs/$jobId/match'
+    | '/_authenticated/jobs/$jobId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,44 +209,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/jobs/$jobId': {
-      id: '/_authenticated/jobs/$jobId'
+    '/_authenticated/jobs/$jobId/': {
+      id: '/_authenticated/jobs/$jobId/'
       path: '/jobs/$jobId'
-      fullPath: '/jobs/$jobId'
-      preLoaderRoute: typeof AuthenticatedJobsJobIdRouteImport
+      fullPath: '/jobs/$jobId/'
+      preLoaderRoute: typeof AuthenticatedJobsJobIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/jobs/$jobId/match': {
       id: '/_authenticated/jobs/$jobId/match'
-      path: '/match'
+      path: '/jobs/$jobId/match'
       fullPath: '/jobs/$jobId/match'
       preLoaderRoute: typeof AuthenticatedJobsJobIdMatchRouteImport
-      parentRoute: typeof AuthenticatedJobsJobIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
-
-interface AuthenticatedJobsJobIdRouteChildren {
-  AuthenticatedJobsJobIdMatchRoute: typeof AuthenticatedJobsJobIdMatchRoute
-}
-
-const AuthenticatedJobsJobIdRouteChildren: AuthenticatedJobsJobIdRouteChildren =
-  {
-    AuthenticatedJobsJobIdMatchRoute: AuthenticatedJobsJobIdMatchRoute,
-  }
-
-const AuthenticatedJobsJobIdRouteWithChildren =
-  AuthenticatedJobsJobIdRoute._addFileChildren(
-    AuthenticatedJobsJobIdRouteChildren,
-  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedMasterResumeRoute: typeof AuthenticatedMasterResumeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedJobsJobIdRoute: typeof AuthenticatedJobsJobIdRouteWithChildren
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
+  AuthenticatedJobsJobIdMatchRoute: typeof AuthenticatedJobsJobIdMatchRoute
+  AuthenticatedJobsJobIdIndexRoute: typeof AuthenticatedJobsJobIdIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -253,8 +241,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedMasterResumeRoute: AuthenticatedMasterResumeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedJobsJobIdRoute: AuthenticatedJobsJobIdRouteWithChildren,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
+  AuthenticatedJobsJobIdMatchRoute: AuthenticatedJobsJobIdMatchRoute,
+  AuthenticatedJobsJobIdIndexRoute: AuthenticatedJobsJobIdIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
