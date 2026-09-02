@@ -868,36 +868,63 @@ export type Database = {
       validation_results: {
         Row: {
           check_type: string
+          confidence: number | null
           created_at: string
+          evidence_excerpts: string[]
+          evidence_ids: string[]
           id: string
+          issues: string[]
           message: string | null
           passed: boolean
+          rationale: string | null
+          run_at: string
           severity: string
+          status: string
           tailored_resume_id: string
           tailored_resume_item_id: string | null
+          unsupported_spans: string[]
           user_id: string
+          validator: string
         }
         Insert: {
           check_type: string
+          confidence?: number | null
           created_at?: string
+          evidence_excerpts?: string[]
+          evidence_ids?: string[]
           id?: string
+          issues?: string[]
           message?: string | null
           passed?: boolean
+          rationale?: string | null
+          run_at?: string
           severity?: string
+          status?: string
           tailored_resume_id: string
           tailored_resume_item_id?: string | null
+          unsupported_spans?: string[]
           user_id: string
+          validator?: string
         }
         Update: {
           check_type?: string
+          confidence?: number | null
           created_at?: string
+          evidence_excerpts?: string[]
+          evidence_ids?: string[]
           id?: string
+          issues?: string[]
           message?: string | null
           passed?: boolean
+          rationale?: string | null
+          run_at?: string
           severity?: string
+          status?: string
           tailored_resume_id?: string
           tailored_resume_item_id?: string | null
+          unsupported_spans?: string[]
           user_id?: string
+          validator?: string
         }
         Relationships: [
           {

@@ -1,12 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, FileCheck2, Loader2, Quote, RefreshCcw, ShieldAlert, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  CircleHelp,
+  FileCheck2,
+  Loader2,
+  Quote,
+  RefreshCcw,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { generateTailoredResume } from "@/lib/tailoring.functions";
+import { validateTailoredResume } from "@/lib/validation.functions";
+import {
+  validationIssueLabel,
+  validationStatusLabel,
+  validationSummary,
+  type ValidationRow,
+} from "@/lib/validation";
 import {
   tailoredSectionLabel,
   TAILORED_SECTIONS,
@@ -56,11 +76,27 @@ type EvidenceLite = {
   content: string;
 };
 
+function StatusIcon({ status }: { status: string }) {
+  if (status === "supported")
+    return <CheckCircle2 className="size-4 text-[hsl(var(--evidence))]" aria-hidden />;
+  if (status === "unsupported") return <XCircle className="size-4 text-destructive" aria-hidden />;
+  if (status === "needs_review") return <CircleHelp className="size-4 text-amber-600" aria-hidden />;
+  return <AlertTriangle className="size-4 text-amber-600" aria-hidden />;
+}
+
+function statusBadgeClass(status?: string) {
+  if (status === "supported") return "border-[hsl(var(--evidence))] text-[hsl(var(--evidence))]";
+  if (status === "unsupported") return "border-destructive text-destructive";
+  if (status === "partially_supported" || status === "needs_review") return "border-amber-500 text-amber-600";
+  return "";
+}
+
 function TailoredResumePage() {
   const { jobId } = Route.useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
+  const [validating, setValidating] = useState(false);
   const queryKey = ["tailored-resume", jobId, user?.id];
 
   const dataQuery = useQuery({
@@ -80,10 +116,17 @@ function TailoredResumePage() {
       if (resumes.error) throw new Error(resumes.error.message);
       const resume = (resumes.data?.[0] ?? null) as TailoredResumeRow | null;
       if (!resume) {
-        return { job: job.data, resume: null, items: [], sources: [], evidence: new Map<string, EvidenceLite>() };
+        return {
+          job: job.data,
+          resume: null,
+          items: [],
+          sources: [],
+          evidence: new Map<string, EvidenceLite>(),
+          validations: [] as ValidationRow[],
+        };
       }
 
-      const [items, sources] = await Promise.all([
+      const [items, sources, validations] = await Promise.all([
         supabase
           .from("tailored_resume_items")
           .select(
@@ -95,9 +138,16 @@ function TailoredResumePage() {
           .from("tailored_resume_item_sources")
           .select("id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt")
           .eq("user_id", user!.id),
+        supabase
+          .from("validation_results")
+          .select(
+            "id, tailored_resume_id, tailored_resume_item_id, check_type, severity, passed, message, status, rationale, confidence, evidence_ids, evidence_excerpts, unsupported_spans, issues, validator, run_at",
+          )
+          .eq("tailored_resume_id", resume.id),
       ]);
       if (items.error) throw new Error(items.error.message);
       if (sources.error) throw new Error(sources.error.message);
+      if (validations.error) throw new Error(validations.error.message);
 
       const itemIds = new Set((items.data ?? []).map((row) => row.id));
       const scopedSources = ((sources.data ?? []) as TailoredSourceRow[]).filter((row) =>
@@ -118,6 +168,7 @@ function TailoredResumePage() {
         items: (items.data ?? []) as TailoredItemRow[],
         sources: scopedSources,
         evidence: new Map(((evidence.data ?? []) as EvidenceLite[]).map((row) => [row.id, row])),
+        validations: (validations.data ?? []) as ValidationRow[],
       };
     },
     enabled: !!user,
@@ -137,6 +188,27 @@ function TailoredResumePage() {
       toast.error("The generation run failed. Please retry.");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const validate = async () => {
+    const resumeId = dataQuery.data?.resume?.id;
+    if (!resumeId) return;
+    setValidating(true);
+    try {
+      const result = await validateTailoredResume({ data: { tailoredResumeId: resumeId } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey });
+      toast.success(
+        `Validated ${result.checked} claims${result.aiUsed ? "" : " with deterministic checks only"}.`,
+      );
+    } catch {
+      toast.error("The validation run failed. Please retry.");
+    } finally {
+      setValidating(false);
     }
   };
 
@@ -163,7 +235,12 @@ function TailoredResumePage() {
     );
   }
 
-  const { job, resume, items, sources, evidence } = dataQuery.data;
+  const { job, resume, items, sources, evidence, validations } = dataQuery.data;
+  const validationByItem = new Map<string, ValidationRow>();
+  for (const row of validations) {
+    if (row.tailored_resume_item_id) validationByItem.set(row.tailored_resume_item_id, row);
+  }
+  const summary = validationSummary(validations.map((row) => ({ status: row.status })));
   const sourcesByItem = new Map<string, TailoredSourceRow[]>();
   for (const row of sources) {
     const list = sourcesByItem.get(row.tailored_resume_item_id) ?? [];
@@ -217,16 +294,92 @@ function TailoredResumePage() {
         </div>
       ) : (
         <>
-          <Card className="border-amber-500/50 bg-amber-500/5">
-            <CardContent className="flex flex-wrap items-center gap-3 py-4 text-sm">
-              <ShieldAlert className="size-5 text-amber-600" aria-hidden />
-              <span className="font-medium">Pending evidence validation.</span>
-              <span className="text-muted-foreground">
-                Every line below cites the master resume evidence it came from, but no independent claim check has run
-                yet. Review the citations before sending this anywhere.
-              </span>
-            </CardContent>
-          </Card>
+          {validations.length === 0 ? (
+            <Card className="border-amber-500/50 bg-amber-500/5">
+              <CardContent className="flex flex-wrap items-center gap-3 py-4 text-sm">
+                <ShieldAlert className="size-5 text-amber-600" aria-hidden />
+                <span className="font-medium">Pending evidence validation.</span>
+                <span className="flex-1 text-muted-foreground">
+                  Every line below cites the master resume evidence it came from, but no independent claim check has
+                  run yet. Validate before sending this anywhere.
+                </span>
+                <Button size="sm" disabled={validating} onClick={() => void validate()}>
+                  {validating ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" aria-hidden />
+                      Validating…
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="size-4" aria-hidden />
+                      Validate claims
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card
+              className={
+                summary.unsupported > 0
+                  ? "border-destructive/50 bg-destructive/5"
+                  : summary.flagged > 0
+                    ? "border-amber-500/50 bg-amber-500/5"
+                    : "border-[hsl(var(--evidence))]/50 bg-[hsl(var(--evidence))]/5"
+              }
+            >
+              <CardHeader>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-base">
+                      {summary.unsupported > 0
+                        ? `${summary.unsupported} unsupported claim${summary.unsupported === 1 ? "" : "s"} — do not send yet`
+                        : summary.flagged > 0
+                          ? `${summary.flagged} claim${summary.flagged === 1 ? "" : "s"} need your review`
+                          : "Every claim is substantiated by cited evidence"}
+                    </CardTitle>
+                    <CardDescription>
+                      Claim validation checks each line against its stored citations — wording, scope, metrics,
+                      technology, employer and timeframe. Your master resume is never changed.
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" disabled={validating} onClick={() => void validate()}>
+                    {validating ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Re-validating…
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="size-4" aria-hidden />
+                        Re-validate
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3 text-sm">
+                {(
+                  [
+                    ["supported", summary.supported],
+                    ["partially_supported", summary.partially_supported],
+                    ["needs_review", summary.needs_review],
+                    ["unsupported", summary.unsupported],
+                  ] as const
+                ).map(([status, count]) => (
+                  <div key={status} className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                    <StatusIcon status={status} />
+                    <span className="font-mono text-sm">{count}</span>
+                    <span className="text-xs text-muted-foreground">{validationStatusLabel[status]}</span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <span className="font-mono text-sm">{summary.total}</span>
+                  <span className="text-xs text-muted-foreground">claims checked</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -255,7 +408,8 @@ function TailoredResumePage() {
                 <CardContent className="space-y-3">
                   {sectionItems.map((item) => {
                     const itemSources = sourcesByItem.get(item.id) ?? [];
-                    if (itemSources.length === 0) return null;
+                    const validation = validationByItem.get(item.id);
+                    if (itemSources.length === 0 && !validation) return null;
                     return (
                       <div key={item.id} className="rounded-lg border p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -266,8 +420,9 @@ function TailoredResumePage() {
                             <p className="text-sm leading-relaxed">{item.statement}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {item.validation_status === "pending" ? "Validation pending" : item.validation_status}
+                            <Badge variant="outline" className={`text-xs ${statusBadgeClass(validation?.status)}`}>
+                              {validationStatusLabel[validation?.status ?? item.validation_status] ??
+                                item.validation_status}
                             </Badge>
                             {item.confidence !== null ? (
                               <span className="font-mono text-xs text-muted-foreground">
@@ -278,6 +433,55 @@ function TailoredResumePage() {
                         </div>
                         {item.rationale ? (
                           <p className="mt-2 text-xs text-muted-foreground">{item.rationale}</p>
+                        ) : null}
+
+                        {validation ? (
+                          <div
+                            className={`mt-3 rounded-md border p-3 text-xs leading-relaxed ${
+                              validation.status === "unsupported"
+                                ? "border-destructive/50 bg-destructive/5"
+                                : validation.status === "supported"
+                                  ? "border-[hsl(var(--evidence))]/40 bg-[hsl(var(--evidence))]/5"
+                                  : "border-amber-500/50 bg-amber-500/5"
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusIcon status={validation.status} />
+                              <span className="font-medium">{validationStatusLabel[validation.status]}</span>
+                              {validation.confidence !== null ? (
+                                <span className="font-mono text-muted-foreground">
+                                  {Math.round(validation.confidence * 100)}% confidence
+                                </span>
+                              ) : null}
+                              <span className="font-mono uppercase tracking-wide text-muted-foreground">
+                                {validation.validator === "deterministic" ? "rule check" : "rule + AI check"}
+                              </span>
+                            </div>
+                            {validation.rationale ? <p className="mt-2">{validation.rationale}</p> : null}
+                            {validation.unsupported_spans.length > 0 ? (
+                              <p className="mt-2">
+                                <span className="font-medium">Not substantiated: </span>
+                                {validation.unsupported_spans.map((span) => (
+                                  <span
+                                    key={span}
+                                    className="mr-1 rounded bg-destructive/15 px-1 py-0.5 font-mono text-destructive"
+                                  >
+                                    {span}
+                                  </span>
+                                ))}
+                              </p>
+                            ) : null}
+                            {validation.issues.length > 0 ? (
+                              <ul className="mt-2 space-y-1">
+                                {validation.issues.map((issue) => (
+                                  <li key={issue} className="flex items-start gap-2">
+                                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                                    <span>{validationIssueLabel[issue] ?? issue}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
                         ) : null}
 
                         <Collapsible>
