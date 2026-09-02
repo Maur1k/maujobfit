@@ -6,10 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   tailoredSectionLabel,
+  TAILORED_ITEM_COLUMNS,
+  TAILORED_RESUME_COLUMNS,
   TAILORED_SECTIONS,
   type TailoredItemRow,
   type TailoredResumeRow,
 } from "@/lib/tailoring";
+import { priorityBadgeClass, priorityLabel, PRIORITY_RANK, type CompositionPriority } from "@/lib/composition";
+import { normaliseSettings, settingsSummary } from "@/lib/tailoring-settings";
+import { ContentPriorityPanel } from "@/components/jobs/ContentPriorityPanel";
 import { MASTER_IMMUTABILITY_NOTE } from "@/lib/skill-relevance";
 import { SkillRelevancePanel } from "@/components/jobs/SkillRelevancePanel";
 import { Button } from "@/components/ui/button";
@@ -50,9 +55,7 @@ function DraftPreviewPage() {
 
       const resumes = await supabase
         .from("tailored_resumes")
-        .select(
-          "id, job_id, master_resume_id, title, status, generation_status, error_message, version, match_score, evidence_coverage, notes, created_at",
-        )
+        .select(TAILORED_RESUME_COLUMNS)
         .eq("job_id", jobId)
         .order("version", { ascending: false })
         .limit(1);
@@ -62,9 +65,7 @@ function DraftPreviewPage() {
 
       const items = await supabase
         .from("tailored_resume_items")
-        .select(
-          "id, section, heading, statement, sort_order, is_evidence_backed, validation_status, rationale, confidence, source_text",
-        )
+        .select(TAILORED_ITEM_COLUMNS)
         .eq("tailored_resume_id", resume.id)
         .order("sort_order", { ascending: true });
       if (items.error) throw new Error(items.error.message);
@@ -161,7 +162,10 @@ function DraftPreviewPage() {
             <CardHeader>
               <CardTitle className="text-base">{resume.title}</CardTitle>
               <CardDescription>
-                Version {resume.version} · {items.length} generated items · draft, not yet validated.{" "}
+                Version {resume.version} · {items.length} selected items · draft, not yet validated.
+                <br />
+                Composed with: {settingsSummary(normaliseSettings(resume.settings))}
+                <br />
                 {MASTER_IMMUTABILITY_NOTE}
               </CardDescription>
             </CardHeader>
@@ -183,19 +187,46 @@ function DraftPreviewPage() {
                 <CardContent className="space-y-2">
                   {section === "skill" ? (
                     <ul className="flex flex-wrap gap-2">
-                      {sectionItems.map((item) => (
-                        <li key={item.id}>
-                          <Badge variant="secondary" className="text-sm font-normal">
-                            {item.statement}
-                          </Badge>
-                        </li>
-                      ))}
+                      {sectionItems
+                        .slice()
+                        .sort(
+                          (a, b) =>
+                            PRIORITY_RANK[(a.priority ?? "supporting") as CompositionPriority] -
+                            PRIORITY_RANK[(b.priority ?? "supporting") as CompositionPriority],
+                        )
+                        .map((item) => (
+                          <li key={item.id}>
+                            <span
+                              className="inline-flex items-center gap-2 rounded-md border bg-secondary/40 px-2.5 py-1 text-sm"
+                              title={item.priority_rationale ?? undefined}
+                            >
+                              {item.statement}
+                              {item.priority ? (
+                                <Badge
+                                  className={`${priorityBadgeClass[item.priority as CompositionPriority]} text-[10px]`}
+                                >
+                                  {priorityLabel[item.priority as CompositionPriority]}
+                                </Badge>
+                              ) : null}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
                   ) : (
                     sectionItems.map((item) => (
                       <div key={item.id} className="rounded-lg border bg-background p-4">
-                        {item.heading ? <p className="text-sm font-medium">{item.heading}</p> : null}
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          {item.heading ? <p className="text-sm font-medium">{item.heading}</p> : <span />}
+                          {item.priority ? (
+                            <Badge className={priorityBadgeClass[item.priority as CompositionPriority]}>
+                              {priorityLabel[item.priority as CompositionPriority]}
+                            </Badge>
+                          ) : null}
+                        </div>
                         <p className="mt-1 text-sm text-muted-foreground">{item.statement}</p>
+                        {item.priority_rationale ? (
+                          <p className="mt-2 text-xs text-muted-foreground">{item.priority_rationale}</p>
+                        ) : null}
                       </div>
                     ))
                   )}
@@ -213,6 +244,7 @@ function DraftPreviewPage() {
         </>
       )}
 
+      <ContentPriorityPanel jobId={jobId} />
       <SkillRelevancePanel jobId={jobId} />
     </div>
   );

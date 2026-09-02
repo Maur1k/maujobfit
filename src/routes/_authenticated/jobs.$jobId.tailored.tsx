@@ -28,11 +28,17 @@ import {
 } from "@/lib/validation";
 import {
   tailoredSectionLabel,
+  TAILORED_ITEM_COLUMNS,
+  TAILORED_RESUME_COLUMNS,
   TAILORED_SECTIONS,
   type TailoredItemRow,
   type TailoredResumeRow,
   type TailoredSourceRow,
 } from "@/lib/tailoring";
+import { TailoringSettingsCard, tailoringSettingsQueryKey } from "@/components/jobs/TailoringSettingsCard";
+import { ContentPriorityPanel, contentPriorityQueryKey } from "@/components/jobs/ContentPriorityPanel";
+import { priorityBadgeClass, priorityLabel, type CompositionPriority } from "@/lib/composition";
+import { normaliseSettings, settingsSummary } from "@/lib/tailoring-settings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -96,9 +102,7 @@ function TailoredResumePage() {
 
       const resumes = await supabase
         .from("tailored_resumes")
-        .select(
-          "id, job_id, master_resume_id, title, status, generation_status, error_message, version, match_score, evidence_coverage, notes, created_at",
-        )
+        .select(TAILORED_RESUME_COLUMNS)
         .eq("job_id", jobId)
         .order("version", { ascending: false })
         .limit(1);
@@ -119,9 +123,7 @@ function TailoredResumePage() {
       const [items, sources, validations] = await Promise.all([
         supabase
           .from("tailored_resume_items")
-          .select(
-            "id, section, heading, statement, sort_order, is_evidence_backed, validation_status, rationale, confidence, source_text",
-          )
+          .select(TAILORED_ITEM_COLUMNS)
           .eq("tailored_resume_id", resume.id)
           .order("sort_order", { ascending: true }),
         supabase
@@ -189,8 +191,12 @@ function TailoredResumePage() {
         queryClient.invalidateQueries({ queryKey }),
         queryClient.invalidateQueries({ queryKey: skillRelevanceQueryKey(jobId, user?.id) }),
         queryClient.invalidateQueries({ queryKey: ["tailored-preview", jobId, user?.id] }),
+        queryClient.invalidateQueries({ queryKey: contentPriorityQueryKey(jobId, user?.id) }),
+        queryClient.invalidateQueries({ queryKey: tailoringSettingsQueryKey(jobId, user?.id) }),
       ]);
-      toast.success(`Generated v${result.version} — ${result.itemCount} items with ${result.sourceCount} citations.`);
+      toast.success(
+        `Generated v${result.version} — ${result.itemCount} items from ${result.candidateCount} ranked master resume entries.`,
+      );
       await navigate({ to: "/jobs/$jobId/preview", params: { jobId } });
     } catch {
       toast.error("The generation run failed. Please retry.");
@@ -470,13 +476,15 @@ function TailoredResumePage() {
         </div>
       </div>
 
+      <TailoringSettingsCard jobId={jobId} />
+
       {!resume ? (
         <div className="rounded-lg border border-dashed bg-secondary/30 p-10 text-center">
           <FileCheck2 className="mx-auto size-6 text-muted-foreground" aria-hidden />
           <p className="mt-3 font-medium">No tailored version yet</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Generation reads this job's structured requirements and the match report's supporting evidence — exact
-            matches first, related evidence kept in your own wording. Missing requirements are never written in.
+            Generation ranks every Master Resume entry for this posting — high priority content leads, supporting and
+            transferable evidence is retained, and missing requirements are never written in.
           </p>
         </div>
       ) : (
@@ -708,6 +716,8 @@ function TailoredResumePage() {
             <CardHeader>
               <CardTitle className="text-base">{resume.title}</CardTitle>
               <CardDescription>
+                Settings used: {settingsSummary(normaliseSettings(resume.settings))}
+                <br />
                 Version {resume.version} · {items.length} generated items ·{" "}
                 {Math.round((resume.match_score ?? 0) * 100)}% weighted requirement coverage ·{" "}
                 {Math.round((resume.evidence_coverage ?? 0) * 100)}% exact coverage · master resume untouched.
@@ -730,6 +740,17 @@ function TailoredResumePage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {sectionItems.map((item) => (
+                    <div key={`${item.id}-wrap`} className="space-y-1">
+                      {item.priority ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className={priorityBadgeClass[item.priority as CompositionPriority]}>
+                            {priorityLabel[item.priority as CompositionPriority]}
+                          </Badge>
+                          {item.priority_rationale ? (
+                            <span className="text-xs text-muted-foreground">{item.priority_rationale}</span>
+                          ) : null}
+                        </div>
+                      ) : null}
                     <TailoredItemCard
                       key={item.id}
                       item={item}
@@ -747,12 +768,14 @@ function TailoredResumePage() {
                         await queryClient.invalidateQueries({ queryKey });
                       }}
                     />
+                    </div>
                   ))}
                 </CardContent>
               </Card>
             );
           })}
 
+          <ContentPriorityPanel jobId={jobId} />
           <SkillRelevancePanel jobId={jobId} />
         </>
       )}

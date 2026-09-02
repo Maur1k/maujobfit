@@ -208,6 +208,86 @@ export type Database = {
           },
         ]
       }
+      job_content_priorities: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          label: string
+          master_resume_id: string
+          matched_terms: string[]
+          priority: Database["public"]["Enums"]["composition_priority"]
+          rationale: string
+          resume_evidence_id: string | null
+          resume_item_id: string | null
+          score: number
+          section: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          label: string
+          master_resume_id: string
+          matched_terms?: string[]
+          priority: Database["public"]["Enums"]["composition_priority"]
+          rationale: string
+          resume_evidence_id?: string | null
+          resume_item_id?: string | null
+          score?: number
+          section: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          label?: string
+          master_resume_id?: string
+          matched_terms?: string[]
+          priority?: Database["public"]["Enums"]["composition_priority"]
+          rationale?: string
+          resume_evidence_id?: string | null
+          resume_item_id?: string | null
+          score?: number
+          section?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_content_priorities_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_content_priorities_master_resume_id_fkey"
+            columns: ["master_resume_id"]
+            isOneToOne: false
+            referencedRelation: "master_resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_content_priorities_resume_evidence_id_fkey"
+            columns: ["resume_evidence_id"]
+            isOneToOne: false
+            referencedRelation: "resume_evidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_content_priorities_resume_item_id_fkey"
+            columns: ["resume_item_id"]
+            isOneToOne: false
+            referencedRelation: "resume_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_requirements: {
         Row: {
           aliases: string[]
@@ -320,6 +400,68 @@ export type Database = {
             columns: ["master_resume_id"]
             isOneToOne: false
             referencedRelation: "master_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_tailoring_settings: {
+        Row: {
+          created_at: string
+          id: string
+          include_certifications: boolean
+          include_education: boolean
+          include_experience: boolean
+          include_projects: boolean
+          include_skills: boolean
+          include_summary: boolean
+          job_id: string
+          project_inclusion: string
+          resume_length: string
+          skills_scope: string
+          tailoring_level: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          include_certifications?: boolean
+          include_education?: boolean
+          include_experience?: boolean
+          include_projects?: boolean
+          include_skills?: boolean
+          include_summary?: boolean
+          job_id: string
+          project_inclusion?: string
+          resume_length?: string
+          skills_scope?: string
+          tailoring_level?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          include_certifications?: boolean
+          include_education?: boolean
+          include_experience?: boolean
+          include_projects?: boolean
+          include_skills?: boolean
+          include_summary?: boolean
+          job_id?: string
+          project_inclusion?: string
+          resume_length?: string
+          skills_scope?: string
+          tailoring_level?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_tailoring_settings_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
         ]
@@ -957,6 +1099,8 @@ export type Database = {
           heading: string | null
           id: string
           is_evidence_backed: boolean
+          priority: Database["public"]["Enums"]["composition_priority"]
+          priority_rationale: string | null
           rationale: string | null
           section: string
           sort_order: number
@@ -973,6 +1117,8 @@ export type Database = {
           heading?: string | null
           id?: string
           is_evidence_backed?: boolean
+          priority?: Database["public"]["Enums"]["composition_priority"]
+          priority_rationale?: string | null
           rationale?: string | null
           section: string
           sort_order?: number
@@ -989,6 +1135,8 @@ export type Database = {
           heading?: string | null
           id?: string
           is_evidence_backed?: boolean
+          priority?: Database["public"]["Enums"]["composition_priority"]
+          priority_rationale?: string | null
           rationale?: string | null
           section?: string
           sort_order?: number
@@ -1099,6 +1247,7 @@ export type Database = {
           master_resume_id: string | null
           match_score: number | null
           notes: string | null
+          settings: Json
           status: string
           title: string
           updated_at: string
@@ -1115,6 +1264,7 @@ export type Database = {
           master_resume_id?: string | null
           match_score?: number | null
           notes?: string | null
+          settings?: Json
           status?: string
           title?: string
           updated_at?: string
@@ -1131,6 +1281,7 @@ export type Database = {
           master_resume_id?: string | null
           match_score?: number | null
           notes?: string | null
+          settings?: Json
           status?: string
           title?: string
           updated_at?: string
@@ -1240,6 +1391,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      composition_priority: "high" | "supporting" | "low" | "exclude"
       skill_relevance: "exact" | "related" | "listed_only" | "not_relevant"
     }
     CompositeTypes: {
@@ -1368,6 +1520,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      composition_priority: ["high", "supporting", "low", "exclude"],
       skill_relevance: ["exact", "related", "listed_only", "not_relevant"],
     },
   },
