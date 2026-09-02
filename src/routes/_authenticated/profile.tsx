@@ -15,13 +15,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — Evidence Tailor" },
+      { title: "Profile — MauJobFit" },
       {
         name: "description",
         content:
-          "Manage the contact details and links that appear on every resume you export from Evidence Tailor.",
+          "Manage the contact details and links that appear on every resume you export from MauJobFit.",
       },
-      { property: "og:title", content: "Profile — Evidence Tailor" },
+      { property: "og:title", content: "Profile — MauJobFit" },
       {
         property: "og:description",
         content: "Manage the contact header used on your exported resumes.",

@@ -13,13 +13,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Evidence Tailor" },
+      { title: "Dashboard — MauJobFit" },
       {
         name: "description",
         content:
           "See your master resume status, evidence coverage and recent tailoring activity in one place.",
       },
-      { property: "og:title", content: "Dashboard — Evidence Tailor" },
+      { property: "og:title", content: "Dashboard — MauJobFit" },
       {
         property: "og:description",
         content: "Master resume status and recent tailoring activity.",
@@ -147,7 +147,8 @@ function Dashboard() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link to="/master-resume">
+                  <Link to="/import">
+
                     <FileUp className="size-4" aria-hidden />
                     Import PDF
                   </Link>

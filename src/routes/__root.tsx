@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Evidence Tailor — Evidence-Backed Resume Tailoring" },
+      { title: "MauJobFit — Evidence-Backed Resume Tailoring" },
       {
         name: "description",
         content:
           "Build a master resume of atomic evidence and tailor it to any job, with every statement traceable to a source record.",
       },
-      { property: "og:title", content: "Evidence Tailor" },
+      { property: "og:title", content: "MauJobFit" },
       {
         property: "og:description",
         content: "Every tailored statement is backed by source evidence.",

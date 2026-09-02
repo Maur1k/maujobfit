@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedMasterResumeRouteImport } from './routes/_authenticated/master-resume'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 
@@ -35,6 +36,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMasterResumeRoute =
   AuthenticatedMasterResumeRouteImport.update({
     id: '/master-resume',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/import': typeof AuthenticatedImportRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
 }
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/import': typeof AuthenticatedImportRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
 }
@@ -67,20 +75,23 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/master-resume': typeof AuthenticatedMasterResumeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/master-resume' | '/profile'
+  fullPaths:
+    '/' | '/auth' | '/dashboard' | '/import' | '/master-resume' | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/master-resume' | '/profile'
+  to: '/' | '/auth' | '/dashboard' | '/import' | '/master-resume' | '/profile'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/import'
     | '/_authenticated/master-resume'
     | '/_authenticated/profile'
   fileRoutesById: FileRoutesById
@@ -121,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/import': {
+      id: '/_authenticated/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/master-resume': {
       id: '/_authenticated/master-resume'
       path: '/master-resume'
@@ -140,12 +158,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedMasterResumeRoute: typeof AuthenticatedMasterResumeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedMasterResumeRoute: AuthenticatedMasterResumeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
 }

@@ -15,13 +15,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Evidence Tailor" },
+      { title: "Sign in — MauJobFit" },
       {
         name: "description",
         content:
           "Sign in or create an account to build an evidence-backed master resume and tailor it to any job.",
       },
-      { property: "og:title", content: "Sign in — Evidence Tailor" },
+      { property: "og:title", content: "Sign in — MauJobFit" },
       {
         property: "og:description",
         content: "Access your evidence-backed resume workspace.",
@@ -88,7 +88,7 @@ function AuthPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between border-r border-border bg-primary p-10 text-primary-foreground lg:flex">
         <Link to="/" className="font-display text-lg font-semibold">
-          Evidence<span className="text-evidence">·</span>Tailor
+          Mau<span className="text-evidence">·</span>JobFit
         </Link>
         <div className="space-y-6">
           <h1 className="max-w-md font-display text-4xl font-semibold leading-tight">

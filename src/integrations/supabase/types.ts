@@ -387,6 +387,87 @@ export type Database = {
           },
         ]
       }
+      resume_import_items: {
+        Row: {
+          bullets: Json
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          merged_resume_item_id: string | null
+          organization: string | null
+          resume_import_id: string
+          role: string | null
+          section: string
+          skills: string[]
+          sort_order: number
+          start_date: string | null
+          status: string
+          title: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          bullets?: Json
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          merged_resume_item_id?: string | null
+          organization?: string | null
+          resume_import_id: string
+          role?: string | null
+          section: string
+          skills?: string[]
+          sort_order?: number
+          start_date?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          bullets?: Json
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          merged_resume_item_id?: string | null
+          organization?: string | null
+          resume_import_id?: string
+          role?: string | null
+          section?: string
+          skills?: string[]
+          sort_order?: number
+          start_date?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_import_items_merged_resume_item_id_fkey"
+            columns: ["merged_resume_item_id"]
+            isOneToOne: false
+            referencedRelation: "resume_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resume_import_items_resume_import_id_fkey"
+            columns: ["resume_import_id"]
+            isOneToOne: false
+            referencedRelation: "resume_imports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resume_imports: {
         Row: {
           created_at: string
@@ -397,9 +478,14 @@ export type Database = {
           id: string
           master_resume_id: string | null
           mime_type: string | null
+          page_count: number | null
           parsed_at: string | null
+          parsed_profile: Json
+          parsed_summary: string | null
+          profile_status: string
           raw_text: string | null
           status: string
+          summary_status: string
           updated_at: string
           user_id: string
         }
@@ -412,9 +498,14 @@ export type Database = {
           id?: string
           master_resume_id?: string | null
           mime_type?: string | null
+          page_count?: number | null
           parsed_at?: string | null
+          parsed_profile?: Json
+          parsed_summary?: string | null
+          profile_status?: string
           raw_text?: string | null
           status?: string
+          summary_status?: string
           updated_at?: string
           user_id: string
         }
@@ -427,9 +518,14 @@ export type Database = {
           id?: string
           master_resume_id?: string | null
           mime_type?: string | null
+          page_count?: number | null
           parsed_at?: string | null
+          parsed_profile?: Json
+          parsed_summary?: string | null
+          profile_status?: string
           raw_text?: string | null
           status?: string
+          summary_status?: string
           updated_at?: string
           user_id?: string
         }
@@ -490,6 +586,7 @@ export type Database = {
           location: string | null
           master_resume_id: string
           organization: string | null
+          resume_import_id: string | null
           role: string | null
           section: string
           skills: string[]
@@ -508,6 +605,7 @@ export type Database = {
           location?: string | null
           master_resume_id: string
           organization?: string | null
+          resume_import_id?: string | null
           role?: string | null
           section: string
           skills?: string[]
@@ -526,6 +624,7 @@ export type Database = {
           location?: string | null
           master_resume_id?: string
           organization?: string | null
+          resume_import_id?: string | null
           role?: string | null
           section?: string
           skills?: string[]
@@ -542,6 +641,13 @@ export type Database = {
             columns: ["master_resume_id"]
             isOneToOne: false
             referencedRelation: "master_resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resume_items_resume_import_id_fkey"
+            columns: ["resume_import_id"]
+            isOneToOne: false
+            referencedRelation: "resume_imports"
             referencedColumns: ["id"]
           },
         ]

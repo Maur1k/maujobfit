@@ -44,13 +44,13 @@ import {
 export const Route = createFileRoute("/_authenticated/master-resume")({
   head: () => ({
     meta: [
-      { title: "Master Resume Editor — Evidence Tailor" },
+      { title: "Master Resume Editor — MauJobFit" },
       {
         name: "description",
         content:
           "Build your canonical career record section by section. Every entry and bullet is stored as an atomic evidence record with provenance.",
       },
-      { property: "og:title", content: "Master Resume Editor — Evidence Tailor" },
+      { property: "og:title", content: "Master Resume Editor — MauJobFit" },
       {
         property: "og:description",
         content: "One canonical career record, stored as citable atomic evidence.",
