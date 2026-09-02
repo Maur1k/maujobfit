@@ -75,7 +75,7 @@ export const parseResumeImport = createServerFn({ method: "POST" })
 
     const { data: row, error: rowError } = await supabase
       .from("resume_imports")
-      .select("id, file_path, file_name")
+      .select("id, file_path, file_name, mime_type")
       .eq("id", data.importId)
       .maybeSingle();
     if (rowError) throw new Error(rowError.message);
@@ -89,6 +89,18 @@ export const parseResumeImport = createServerFn({ method: "POST" })
       return { ok: false as const, error: message };
     };
 
+    // Reject a rejected upload's bytes so nothing unvalidated is retained.
+    const rejectFile = async (message: string) => {
+      await supabase.storage.from("resume-imports").remove([row.file_path!]);
+      await supabase.from("resume_imports").update({ file_path: null }).eq("id", data.importId);
+      return fail(message);
+    };
+
+    // The declared type is client-supplied; treat anything else as a rejection.
+    if (!isPdfMimeType(row.mime_type)) {
+      return rejectFile("Only PDF resumes are supported. Export your resume as a PDF and try again.");
+    }
+
     await supabase
       .from("resume_imports")
       .update({ status: "parsing", error_message: null })
@@ -98,11 +110,20 @@ export const parseResumeImport = createServerFn({ method: "POST" })
     if (download.error || !download.data) {
       return fail("We couldn't read the uploaded file. Try uploading it again.");
     }
+    if (download.data.size > MAX_IMPORT_BYTES) {
+      return rejectFile("That file is larger than 15 MB. Please upload a smaller PDF.");
+    }
+
+    // Authoritative byte-level validation, before any extraction or AI call.
+    const buffer = new Uint8Array(await download.data.arrayBuffer());
+    const signature = validatePdfBytes(buffer);
+    if (!signature.ok) {
+      return rejectFile(signature.error);
+    }
 
     let text = "";
     let pageCount: number | null = null;
     try {
-      const buffer = new Uint8Array(await download.data.arrayBuffer());
       const result = await extractPdfText(buffer);
       text = (result.text ?? "").replace(/\u0000/g, "").trim();
       pageCount = result.pageCount ?? null;
@@ -110,6 +131,7 @@ export const parseResumeImport = createServerFn({ method: "POST" })
       return fail(
         "This PDF couldn't be opened. It may be corrupted or password protected — try exporting it again.",
       );
+
     }
 
     if (text.replace(/\s+/g, "").length < 120) {
