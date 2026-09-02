@@ -94,24 +94,52 @@ const SKILL_GROUPS: { label: string; match: RegExp }[] = [
 ];
 
 function groupSkills(names: string[]) {
-  const groups = new Map<string, string[]>();
+  const explicit = new Map<string, string[]>();
+  const explicitOrder: string[] = [];
+  const inferred = new Map<string, string[]>();
   const other: string[] = [];
-  for (const name of names) {
-    const group = SKILL_GROUPS.find((candidate) => candidate.match.test(name.trim()));
-    if (!group) {
-      other.push(name);
+
+  const push = (map: Map<string, string[]>, label: string, values: string[]) => {
+    const list = map.get(label) ?? [];
+    for (const value of values) if (value && !list.includes(value)) list.push(value);
+    map.set(label, list);
+  };
+
+  for (const raw of names) {
+    const name = raw.trim();
+    // "Databases (MySQL, PostgreSQL)" → an author-provided category with members
+    const labelled = /^([^()]{2,40}?)\s*\(([^()]+)\)$/.exec(name);
+    if (labelled) {
+      const label = labelled[1]!.trim();
+      if (!explicit.has(label)) explicitOrder.push(label);
+      push(
+        explicit,
+        label,
+        labelled[2]!
+          .split(/[,;/]/)
+          .map((value) => value.trim())
+          .filter(Boolean),
+      );
       continue;
     }
-    const list = groups.get(group.label) ?? [];
-    list.push(name);
-    groups.set(group.label, list);
+    const group = SKILL_GROUPS.find((candidate) => candidate.match.test(name));
+    if (group) push(inferred, group.label, [name]);
+    else other.push(name);
   }
+
   const ordered: { label: string; skills: string[] }[] = [];
   for (const group of SKILL_GROUPS) {
-    const list = groups.get(group.label);
+    const list = inferred.get(group.label);
     if (list?.length) ordered.push({ label: group.label, skills: list });
   }
-  if (other.length) ordered.push({ label: ordered.length ? "Also" : "Skills", skills: other });
+  for (const label of explicitOrder) {
+    const list = explicit.get(label);
+    if (!list?.length) continue;
+    const existing = ordered.find((entry) => entry.label.toLowerCase() === label.toLowerCase());
+    if (existing) push(new Map([[existing.label, existing.skills]]), existing.label, list);
+    else ordered.push({ label, skills: list });
+  }
+  if (other.length) ordered.push({ label: ordered.length ? "Additional" : "Skills", skills: other });
   return ordered;
 }
 
