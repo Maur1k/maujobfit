@@ -147,7 +147,8 @@ function Dashboard() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link to="/master-resume">
+                  <Link to="/import">
+
                     <FileUp className="size-4" aria-hidden />
                     Import PDF
                   </Link>
