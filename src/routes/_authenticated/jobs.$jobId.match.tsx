@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   FileCheck2,
+  ListChecks,
   Loader2,
   RefreshCcw,
   Sparkles,
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/jobs/$jobId/match")({
       {
         name: "description",
         content:
-          "An explainable match report: every job requirement marked exact, related or missing, with the resume evidence that supports it.",
+          "An explainable match report: every job requirement marked exact, related, listed only, or missing, with the resume evidence that supports it.",
       },
       { property: "og:title", content: "Match Report — MauJobFit" },
       {
@@ -78,6 +79,11 @@ const statusStyle: Record<MatchStatus, { icon: typeof CheckCircle2; className: s
     icon: AlertTriangle,
     className: "border-amber-500/50 bg-amber-500/5",
     badge: "bg-amber-500 text-white",
+  },
+  listed_only: {
+    icon: ListChecks,
+    className: "border-sky-500/50 bg-sky-500/5",
+    badge: "bg-sky-600 text-white",
   },
   missing: {
     icon: XCircle,
@@ -233,13 +239,13 @@ function MatchReport() {
           <CardHeader>
             <CardTitle>Coverage</CardTitle>
             <CardDescription>
-              {summary.exact} exact · {summary.related} related · {summary.missing} missing across{" "}
-              {summary.total} requirements. Related evidence is adjacent, never counted as equivalent.
+              {summary.exact} exact · {summary.related} related · {summary.listed_only} listed only · {summary.missing} missing across{" "}
+              {summary.total} requirements.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex h-3 w-full overflow-hidden rounded-full bg-secondary">
-              {(["exact", "related", "missing"] as MatchStatus[]).map((status) => {
+              {(["exact", "related", "listed_only", "missing"] as MatchStatus[]).map((status) => {
                 const value = summary[status];
                 if (value === 0) return null;
                 return (
@@ -253,8 +259,7 @@ function MatchReport() {
               })}
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              Weighted coverage score: {Math.round(summary.score * 100)}% (exact counts full, related counts
-              half).
+              Weighted coverage score: {Math.round(summary.score * 100)}% (exact counts full, related &amp; listed-only count half).
             </p>
           </CardContent>
         </Card>

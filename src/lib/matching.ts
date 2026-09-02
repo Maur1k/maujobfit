@@ -1,11 +1,12 @@
 import { SKILL_TAXONOMY, normaliseSkill } from "@/lib/job-analysis";
 
-export const MATCH_STATUSES = ["exact", "related", "missing"] as const;
+export const MATCH_STATUSES = ["exact", "related", "listed_only", "missing"] as const;
 export type MatchStatus = (typeof MATCH_STATUSES)[number];
 
 export const matchStatusLabel: Record<MatchStatus, string> = {
   exact: "Exact",
   related: "Related",
+  listed_only: "Listed Only",
   missing: "Missing",
 };
 
@@ -115,12 +116,23 @@ export function matchSkillRequirement(
   }
 
   if (exact.length > 0) {
+    const demonstrated = exact.filter((row) => row.category !== "skill" || row.evidence_kind === "bullet");
+    if (demonstrated.length > 0) {
+      const top = demonstrated.slice(0, 3);
+      return {
+        status: "exact",
+        evidenceIds: top.map((row) => row.id),
+        rationale: `${target.canonical} is supported directly by ${demonstrated.length} experience/project evidence record${demonstrated.length === 1 ? "" : "s"} (e.g. ${describe(top[0]!)}).`,
+        confidence: Math.min(0.95, 0.8 + 0.05 * demonstrated.length),
+      };
+    }
+    // Skill is in the master skills section, but has no supporting bullet/project evidence
     const top = exact.slice(0, 3);
     return {
-      status: "exact",
+      status: "listed_only",
       evidenceIds: top.map((row) => row.id),
-      rationale: `${target.canonical} is named directly in ${exact.length} evidence record${exact.length === 1 ? "" : "s"} (e.g. ${describe(top[0]!)}).`,
-      confidence: Math.min(0.95, 0.8 + 0.05 * exact.length),
+      rationale: `${target.canonical} is listed in your Master Resume skills, but has no supporting experience or project bullet evidence demonstrating it yet.`,
+      confidence: 0.75,
     };
   }
   if (related.length > 0) {
@@ -129,7 +141,7 @@ export function matchSkillRequirement(
     return {
       status: "related",
       evidenceIds: top.map((item) => item.row.id),
-      rationale: `No evidence names ${target.canonical}. Adjacent evidence covers ${vias}, which is related but not equivalent.`,
+      rationale: `No direct evidence names ${target.canonical}. Adjacent evidence covers ${vias}, which is related but not equivalent.`,
       confidence: 0.45,
     };
   }
@@ -188,14 +200,12 @@ export function describe(evidence: EvidenceRow) {
 }
 
 export function coverageSummary(rows: { status: string | null }[]) {
-  const counts = { exact: 0, related: 0, missing: 0 };
-  const seen = new Set<string>();
+  const counts = { exact: 0, related: 0, listed_only: 0, missing: 0 };
   for (const row of rows) {
     const status = (row.status ?? "missing") as MatchStatus;
     if (status in counts) counts[status] += 1;
-    seen.add(status);
   }
-  const total = counts.exact + counts.related + counts.missing;
-  const score = total === 0 ? 0 : (counts.exact + counts.related * 0.5) / total;
+  const total = counts.exact + counts.related + counts.listed_only + counts.missing;
+  const score = total === 0 ? 0 : (counts.exact + (counts.related + counts.listed_only) * 0.5) / total;
   return { ...counts, total, score };
 }

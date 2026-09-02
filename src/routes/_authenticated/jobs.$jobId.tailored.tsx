@@ -298,11 +298,39 @@ function TailoredResumePage() {
     URL.revokeObjectURL(url);
   };
 
+  const resolveItemStatement = (item: TailoredItemRow) => {
+    const status = validationByItem.get(item.id)?.status ?? item.validation_status;
+    if (status === "unsupported") {
+      // Revert to grounded master resume source text if available to preserve truthfulness
+      return item.source_text?.trim() || item.statement;
+    }
+    return item.statement;
+  };
+
+  const exportItemsList = supportedOnly
+    ? items.filter(
+        (item) => (validationByItem.get(item.id)?.status ?? item.validation_status) === "supported",
+      )
+    : items;
+
+  const professionalItems = () =>
+    exportItemsList.map((item) => ({
+      id: item.id,
+      section: item.section,
+      heading: item.heading,
+      statement: resolveItemStatement(item),
+      evidenceIds: (sourcesByItem.get(item.id) ?? [])
+        .slice()
+        .sort((a, b) => (a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0))
+        .map((source) => source.resume_evidence_id),
+    }));
+
   const exportProfessional = async () => {
     if (!resume) return;
     setExporting("professional");
     try {
       const settings = normaliseSettings(resume.settings);
+      const itemsToRender = professionalItems();
       const { blob, fileName } = buildProfessionalResumePdf({
         profile: profile ?? null,
         jobTitle: job.title ?? null,
@@ -310,18 +338,7 @@ function TailoredResumePage() {
         paperSize: settings.paper_size,
         onePage: settings.resume_length === "one_page",
         evidence: evidence as unknown as Map<string, ProEvidence>,
-        items: supportedItems.map((item) => ({
-          id: item.id,
-          section: item.section,
-          heading: item.heading,
-          statement: item.statement,
-          evidenceIds: (sourcesByItem.get(item.id) ?? [])
-            .slice()
-            .sort((a, b) =>
-              a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0,
-            )
-            .map((source) => source.resume_evidence_id),
-        })),
+        items: itemsToRender,
       });
 
       download(blob, fileName);
@@ -333,7 +350,7 @@ function TailoredResumePage() {
           tailored_resume_id: resume.id,
           format: "pdf",
           file_name: fileName,
-          status: "downloaded_professional_supported_only",
+          status: supportedOnly ? "downloaded_professional_supported_only" : "downloaded_professional_complete",
         })
         .select("id")
         .maybeSingle();
@@ -344,14 +361,14 @@ function TailoredResumePage() {
           tailoredResumeId: resume.id,
           reason: "export",
           label: `v${resume.version} · PDF export`,
-          supportedOnly: true,
+          supportedOnly,
           exportId: exportRow?.id ?? null,
           exportFormat: "pdf",
-          notes: `Application-ready PDF with ${supportedItems.length} supported claims.`,
+          notes: `Recruiter-ready PDF with ${itemsToRender.length} items${supportedOnly ? " (supported only)" : ""}.`,
         },
       }).catch(() => null);
 
-      toast.success(`Professional resume exported with ${supportedItems.length} supported claims.`);
+      toast.success(`Professional resume exported with ${itemsToRender.length} items.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
     } finally {
@@ -359,23 +376,12 @@ function TailoredResumePage() {
     }
   };
 
-  const professionalItems = () =>
-    supportedItems.map((item) => ({
-      id: item.id,
-      section: item.section,
-      heading: item.heading,
-      statement: item.statement,
-      evidenceIds: (sourcesByItem.get(item.id) ?? [])
-        .slice()
-        .sort((a, b) => (a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0))
-        .map((source) => source.resume_evidence_id),
-    }));
-
   const exportProfessionalDocx = async () => {
     if (!resume) return;
     setExporting("docx");
     try {
       const settings = normaliseSettings(resume.settings);
+      const itemsToRender = professionalItems();
       const { buildProfessionalResumeDocx } = await import("@/lib/resume-docx-professional");
       const built = buildProfessionalResumeDocx({
         profile: profile ?? null,
@@ -383,7 +389,7 @@ function TailoredResumePage() {
         version: resume.version,
         paperSize: settings.paper_size,
         evidence: evidence as unknown as Map<string, ProEvidence>,
-        items: professionalItems(),
+        items: itemsToRender,
       });
       download(await built.blob(), built.fileName);
 
@@ -394,7 +400,7 @@ function TailoredResumePage() {
           tailored_resume_id: resume.id,
           format: "docx",
           file_name: built.fileName,
-          status: "downloaded_professional_supported_only",
+          status: supportedOnly ? "downloaded_professional_supported_only" : "downloaded_professional_complete",
         })
         .select("id")
         .maybeSingle();
@@ -405,14 +411,14 @@ function TailoredResumePage() {
           tailoredResumeId: resume.id,
           reason: "export",
           label: `v${resume.version} · Word export`,
-          supportedOnly: true,
+          supportedOnly,
           exportId: exportRow?.id ?? null,
           exportFormat: "docx",
-          notes: `Application-ready Word document with ${supportedItems.length} supported claims.`,
+          notes: `Recruiter-ready Word document with ${itemsToRender.length} items${supportedOnly ? " (supported only)" : ""}.`,
         },
       }).catch(() => null);
 
-      toast.success(`Word document exported with ${supportedItems.length} supported claims.`);
+      toast.success(`Word document exported with ${itemsToRender.length} items.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The Word export failed. Please retry.");
     } finally {

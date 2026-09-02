@@ -171,20 +171,20 @@ export function compositionBudget(settings: TailoringSettings): CompositionBudge
   const onePage = settings.resume_length === "one_page";
   const base: CompositionBudget = onePage
     ? {
-        experienceGroups: 3,
+        experienceGroups: 5,
         experienceBullets: 3,
-        projectGroups: 2,
+        projectGroups: 3,
         projectBullets: 2,
-        maxSkills: 16,
-        includeLow: false,
+        maxSkills: 24,
+        includeLow: true,
         summarySentences: "2 sentences",
       }
     : {
-        experienceGroups: 6,
+        experienceGroups: 8,
         experienceBullets: 5,
-        projectGroups: 5,
-        projectBullets: 3,
-        maxSkills: 40,
+        projectGroups: 6,
+        projectBullets: 4,
+        maxSkills: 50,
         includeLow: true,
         summarySentences: "3 sentences",
       };
@@ -193,8 +193,8 @@ export function compositionBudget(settings: TailoringSettings): CompositionBudge
   if (settings.project_inclusion === "most_relevant")
     base.projectGroups = Math.min(base.projectGroups, 3);
 
-  if (settings.skills_scope === "full_master") base.maxSkills = 80;
-  if (settings.skills_scope === "job_only") base.maxSkills = Math.min(base.maxSkills, 14);
+  if (settings.skills_scope === "full_master") base.maxSkills = 100;
+  if (settings.skills_scope === "job_only") base.maxSkills = Math.min(base.maxSkills, 18);
 
   if (settings.tailoring_level === "conservative") {
     base.includeLow = true;
@@ -202,7 +202,7 @@ export function compositionBudget(settings: TailoringSettings): CompositionBudge
     base.experienceBullets += 1;
   }
   if (settings.tailoring_level === "aggressive") {
-    base.projectGroups = Math.max(1, base.projectGroups - 1);
+    base.projectGroups = Math.max(2, base.projectGroups - 1);
     base.experienceBullets = Math.max(2, base.experienceBullets - 1);
   }
 

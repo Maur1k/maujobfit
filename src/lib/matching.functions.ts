@@ -18,7 +18,7 @@ const aiSchema = z.object({
     .array(
       z.object({
         requirement_index: z.number(),
-        status: z.enum(["exact", "related", "missing"]),
+        status: z.enum(["exact", "related", "listed_only", "missing"]),
         evidence_ids: z.array(z.string()).default([]),
         rationale: z.string().default(""),
         confidence: z.number().min(0).max(1).default(0.5),

@@ -148,10 +148,10 @@ export type CandidateResult = CandidateInput & {
 const SECTION_BASE: Record<string, number> = {
   summary: 6,
   experience: 3,
-  project: 1.5,
-  education: 1.5,
-  certification: 1,
-  skill: 0,
+  project: 2.5,
+  education: 2,
+  certification: 1.5,
+  skill: 2,
 };
 
 const LEVEL_THRESHOLDS: Record<TailoringSettings["tailoring_level"], { high: number; supporting: number }> = {
@@ -196,11 +196,11 @@ function rationaleFor(
     case "high":
       return `High priority: ${reasons.join("; ") || "core to the target role and fully evidence-backed"}.`;
     case "supporting":
-      return `Supporting: ${reasons.join("; ") || "no direct keyword overlap, but it is real, transferable evidence worth keeping"}.`;
+      return `Supporting: ${reasons.join("; ") || "transferable background evidence that rounds out your profile"}.`;
     case "low":
-      return `Low priority: ${reasons.join("; ") || "no overlap with this posting"} — retained as space allows.`;
+      return `Low priority: ${reasons.join("; ") || "broader background evidence"} — retained as space allows.`;
     case "exclude":
-      return `Excluded from this version: ${reasons.join("; ") || "no relevance to this posting and redundant with stronger entries"}. It stays in your Master Resume unchanged.`;
+      return `Excluded from this version: ${reasons.join("; ") || "not central to this posting or beyond selected page budget"}. It stays in your Master Resume unchanged.`;
   }
 }
 
@@ -250,22 +250,27 @@ export function prioritiseCandidates(
         for (const row of list) if (row.priority === "low") row.priority = "exclude";
       }
       list.forEach((row, index) => {
-        if (index >= budget.projectGroups && row.priority !== "high") row.priority = "exclude";
+        if (index >= budget.projectGroups && row.priority === "low" && settings.project_inclusion !== "all") {
+          row.priority = "exclude";
+        }
       });
     }
 
-    if (section === "skill" && settings.skills_scope === "job_only") {
-      for (const row of list) if (row.priority === "low") row.priority = "exclude";
+    if (section === "skill") {
+      if (settings.skills_scope === "job_only") {
+        for (const row of list) if (row.priority === "low") row.priority = "exclude";
+      }
+      list.forEach((row, index) => {
+        if (index >= budget.maxSkills && settings.skills_scope !== "full_master") {
+          row.priority = "exclude";
+        }
+      });
     }
 
     if (section === "experience") {
       list.forEach((row, index) => {
         if (index >= budget.experienceGroups && row.priority === "low") row.priority = "exclude";
       });
-    }
-
-    if (!budget.includeLow && section !== "skill") {
-      for (const row of list) if (row.priority === "low") row.priority = "exclude";
     }
   }
 

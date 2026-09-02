@@ -46,6 +46,7 @@ export function itemLabel(item: CompositionItem) {
 }
 
 type SupabaseLike = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: (table: string) => any;
 };
 
@@ -64,8 +65,8 @@ export type JobComposition = {
   candidates: CandidateResult[];
   items: CompositionItem[];
   evidence: CompositionEvidence[];
-  matchStatusByEvidence: Map<string, "exact" | "related">;
-  requirementsMatched: { exact: number; related: number };
+  matchStatusByEvidence: Map<string, "exact" | "related" | "listed_only">;
+  requirementsMatched: { exact: number; related: number; listedOnly: number };
 };
 
 /**
@@ -147,12 +148,14 @@ export async function loadJobComposition(
     return fail("Your master resume has no evidence records yet. Add experience, projects or skills first.");
   }
 
-  const matchStatusByEvidence = new Map<string, "exact" | "related">();
+  const matchStatusByEvidence = new Map<string, "exact" | "related" | "listed_only">();
   for (const row of matches) {
     if (!row.resume_evidence_id) continue;
     if (row.status === "exact") matchStatusByEvidence.set(row.resume_evidence_id, "exact");
     else if (row.status === "related" && !matchStatusByEvidence.has(row.resume_evidence_id)) {
       matchStatusByEvidence.set(row.resume_evidence_id, "related");
+    } else if (row.status === "listed_only" && !matchStatusByEvidence.has(row.resume_evidence_id)) {
+      matchStatusByEvidence.set(row.resume_evidence_id, "listed_only");
     }
   }
 
@@ -240,7 +243,11 @@ export async function loadJobComposition(
   for (const item of items) {
     for (const skill of item.skills ?? []) {
       if (!skill.trim()) continue;
-      skillEntryFor(skill).itemIds.add(item.id);
+      const entry = skillEntryFor(skill);
+      entry.itemIds.add(item.id);
+      // Link the item's evidence record if one exists
+      const itemEvidence = evidence.find((e) => e.resume_item_id === item.id);
+      if (itemEvidence) entry.evidenceIds.add(itemEvidence.id);
     }
     // A skill-section item's title is a category header ("Languages", "Tools"), not a skill.
   }
@@ -279,6 +286,9 @@ export async function loadJobComposition(
     ).length,
     related: requirements.filter((requirement) =>
       matches.some((row) => row.job_requirement_id === requirement.id && row.status === "related"),
+    ).length,
+    listedOnly: requirements.filter((requirement) =>
+      matches.some((row) => row.job_requirement_id === requirement.id && row.status === "listed_only"),
     ).length,
   };
 

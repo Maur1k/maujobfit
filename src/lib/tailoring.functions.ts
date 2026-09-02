@@ -142,9 +142,12 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
         .map((id) => evidenceById.get(id))
         .filter((row): row is CompositionEvidence => !!row);
       const bullets = rows.filter((row) => row.evidence_kind === "bullet");
+      const list = bullets.length > 0 ? bullets : rows;
       const limit = candidate.section === "project" ? budget.projectBullets : budget.experienceBullets;
-      const cap = candidate.priority === "high" ? limit : Math.max(1, limit - 1);
-      return (bullets.length > 0 ? bullets : rows).slice(0, cap);
+      // In experience, ensure we keep at least 2 bullets (if available) so roles don't become sparse
+      const minCap = candidate.section === "experience" ? Math.min(2, list.length) : 1;
+      const cap = candidate.priority === "high" ? limit : Math.max(minCap, limit - 1);
+      return list.slice(0, cap);
     };
 
     const catalogue = narrativeCandidates
@@ -369,6 +372,13 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
           evidence.filter((row) => row.resume_item_id === candidate.resumeItemId).map((row) => row.id),
         );
       }
+      if (ids.length === 0) {
+        // Fallback to any evidence in the skill category or evidence referencing the skill
+        const fallbackEv = evidence.find(
+          (row) => (row.skills ?? []).includes(candidate.label) || row.category === "skill",
+        );
+        if (fallbackEv) ids = [fallbackEv.id];
+      }
       if (ids.length === 0) continue;
       drafts.push({
         section: "skill",
@@ -406,8 +416,8 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
       .limit(1);
     const version = (previous?.[0]?.version ?? 0) + 1;
 
-    const { exact: exactCount, related: relatedCount } = composition.requirementsMatched;
-    const coverage = requirements.length > 0 ? (exactCount + relatedCount * 0.5) / requirements.length : 0;
+    const { exact: exactCount, related: relatedCount, listedOnly: listedOnlyCount } = composition.requirementsMatched;
+    const coverage = requirements.length > 0 ? (exactCount + (relatedCount + listedOnlyCount) * 0.5) / requirements.length : 0;
     const excludedCount = candidates.filter((candidate) => candidate.priority === "exclude").length;
 
     const { data: resume, error: resumeError } = await supabase
@@ -453,14 +463,18 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
 
     const idBySort = new Map(insertedItems.map((row: { sort_order: number; id: string }) => [row.sort_order, row.id]));
     const sources = drafts.flatMap((draft, index) =>
-      draft.evidenceIds.map((evidenceId) => ({
-        user_id: userId,
-        tailored_resume_item_id: idBySort.get(index)!,
-        resume_evidence_id: evidenceId,
-        support_type: matchStatusByEvidence.get(evidenceId) === "exact" ? "primary" : "related",
-        confidence: Number(draft.confidence.toFixed(2)),
-        excerpt: evidenceById.get(evidenceId)?.content.slice(0, 500) ?? null,
-      })),
+      draft.evidenceIds.map((evidenceId) => {
+        const match = matchStatusByEvidence.get(evidenceId);
+        const supportType = match === "exact" ? "primary" : match === "listed_only" ? "listed" : "related";
+        return {
+          user_id: userId,
+          tailored_resume_item_id: idBySort.get(index)!,
+          resume_evidence_id: evidenceId,
+          support_type: supportType,
+          confidence: Number(draft.confidence.toFixed(2)),
+          excerpt: evidenceById.get(evidenceId)?.content.slice(0, 500) ?? null,
+        };
+      }),
     );
     const { error: sourcesError } = await supabase.from("tailored_resume_item_sources").insert(sources);
     if (sourcesError) return fail(sourcesError.message);
