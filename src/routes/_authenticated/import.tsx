@@ -143,9 +143,10 @@ function ImportPage() {
     .reduce((sum, i) => sum + i.bullets.filter((b) => b.status === "accepted").length, 0);
 
   const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["resume-import", activeId] });
-    queryClient.invalidateQueries({ queryKey: ["resume-imports", user?.id] });
+    queryClient.invalidateQueries({ queryKey: ["resume-import"] });
+    queryClient.invalidateQueries({ queryKey: ["resume-imports"] });
   };
+
 
   const runParse = async (importId: string) => {
     setParsing(true);
