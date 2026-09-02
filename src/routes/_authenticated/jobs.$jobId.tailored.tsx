@@ -240,9 +240,61 @@ function TailoredResumePage() {
     : items;
   const excludedCount = items.length - visibleItems.length;
 
+  const supportedItems = items.filter(
+    (item) => (validationByItem.get(item.id)?.status ?? item.validation_status) === "supported",
+  );
+
+  const download = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportProfessional = async () => {
+    if (!resume) return;
+    setExporting("professional");
+    try {
+      const { blob, fileName } = buildProfessionalResumePdf({
+        profile: profile ?? null,
+        jobTitle: job.title ?? null,
+        version: resume.version,
+        evidence: evidence as unknown as Map<string, ProEvidence>,
+        items: supportedItems.map((item) => ({
+          id: item.id,
+          section: item.section,
+          heading: item.heading,
+          statement: item.statement,
+          evidenceIds: (sourcesByItem.get(item.id) ?? [])
+            .slice()
+            .sort((a, b) => (a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0))
+            .map((source) => source.resume_evidence_id),
+        })),
+      });
+
+      download(blob, fileName);
+
+      const { error } = await supabase.from("exports").insert({
+        user_id: user!.id,
+        tailored_resume_id: resume.id,
+        format: "pdf",
+        file_name: fileName,
+        status: "downloaded_professional_supported_only",
+      });
+      if (error) throw new Error(error.message);
+      toast.success(`Professional resume exported with ${supportedItems.length} supported claims.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const exportPdf = async () => {
     if (!resume) return;
-    setExporting(true);
+    setExporting("audit");
     try {
       const { blob, fileName } = buildTailoredResumePdf({
         profile: profile ?? null,
