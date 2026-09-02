@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FileStack, FileUp, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { Briefcase, FileStack, FileUp, LayoutDashboard, LogOut, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
