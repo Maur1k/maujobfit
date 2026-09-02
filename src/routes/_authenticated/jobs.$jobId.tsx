@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, RefreshCcw } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, RefreshCcw, ScanSearch } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -169,6 +169,12 @@ function JobDetail() {
             >
               {analysisStatusLabel(job.analysis_status)}
             </Badge>
+            <Button asChild size="sm">
+              <Link to="/jobs/$jobId/match" params={{ jobId: job.id }}>
+                <ScanSearch className="size-4" aria-hidden />
+                Match report
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" disabled={retrying} onClick={() => void retry()}>
               {retrying ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden />
