@@ -167,14 +167,19 @@ function ImportPage() {
 
   const onUpload = async (file: File) => {
     if (!user) return;
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("Only PDF files are supported. Export your resume as a PDF and try again.");
-      return;
-    }
     if (file.size > MAX_IMPORT_BYTES) {
       toast.error("That file is larger than 15 MB. Please upload a smaller PDF.");
       return;
     }
+
+    // Fast local feedback only — the server re-validates the stored bytes
+    // before anything is parsed, so this cannot be used to bypass checks.
+    const check = validatePdfBytes(new Uint8Array(await file.arrayBuffer()));
+    if (!check.ok) {
+      toast.error(check.error);
+      return;
+    }
+
 
     setUploading(true);
     const { data: created, error: insertError } = await supabase
