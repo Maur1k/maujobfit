@@ -742,40 +742,52 @@ export type Database = {
       }
       tailored_resume_items: {
         Row: {
+          confidence: number | null
           created_at: string
           heading: string | null
           id: string
           is_evidence_backed: boolean
+          rationale: string | null
           section: string
           sort_order: number
+          source_text: string | null
           statement: string
           tailored_resume_id: string
           updated_at: string
           user_id: string
+          validation_status: string
         }
         Insert: {
+          confidence?: number | null
           created_at?: string
           heading?: string | null
           id?: string
           is_evidence_backed?: boolean
+          rationale?: string | null
           section: string
           sort_order?: number
+          source_text?: string | null
           statement: string
           tailored_resume_id: string
           updated_at?: string
           user_id: string
+          validation_status?: string
         }
         Update: {
+          confidence?: number | null
           created_at?: string
           heading?: string | null
           id?: string
           is_evidence_backed?: boolean
+          rationale?: string | null
           section?: string
           sort_order?: number
+          source_text?: string | null
           statement?: string
           tailored_resume_id?: string
           updated_at?: string
           user_id?: string
+          validation_status?: string
         }
         Relationships: [
           {
@@ -790,7 +802,9 @@ export type Database = {
       tailored_resumes: {
         Row: {
           created_at: string
+          error_message: string | null
           evidence_coverage: number | null
+          generation_status: string
           id: string
           job_id: string | null
           master_resume_id: string | null
@@ -800,10 +814,13 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          version: number
         }
         Insert: {
           created_at?: string
+          error_message?: string | null
           evidence_coverage?: number | null
+          generation_status?: string
           id?: string
           job_id?: string | null
           master_resume_id?: string | null
@@ -813,10 +830,13 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id: string
+          version?: number
         }
         Update: {
           created_at?: string
+          error_message?: string | null
           evidence_coverage?: number | null
+          generation_status?: string
           id?: string
           job_id?: string | null
           master_resume_id?: string | null
@@ -826,6 +846,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          version?: number
         }
         Relationships: [
           {

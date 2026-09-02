@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  FileCheck2,
   Loader2,
   RefreshCcw,
   Sparkles,
@@ -196,14 +197,22 @@ function MatchReport() {
               evidence.
             </p>
           </div>
-          <Button disabled={running} onClick={() => void run()}>
-            {running ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <Sparkles className="size-4" aria-hidden />
-            )}
-            {hasReport ? "Re-run match" : "Run match"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant={hasReport ? "default" : "outline"} asChild disabled={!hasReport}>
+              <Link to="/jobs/$jobId/tailored" params={{ jobId }}>
+                <FileCheck2 className="size-4" aria-hidden />
+                Tailored resume
+              </Link>
+            </Button>
+            <Button variant="outline" disabled={running} onClick={() => void run()}>
+              {running ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Sparkles className="size-4" aria-hidden />
+              )}
+              {hasReport ? "Re-run match" : "Run match"}
+            </Button>
+          </div>
         </div>
       </div>
 
