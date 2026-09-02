@@ -77,7 +77,7 @@ function MasterResumePage() {
       .from("master_resumes")
       .insert({ user_id: user.id, title: "Master Resume", status: "draft" });
     setCreating(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Master Resume created. Evidence capture arrives next.");
     queryClient.invalidateQueries({ queryKey: ["master-resume", user.id] });
     queryClient.invalidateQueries({ queryKey: ["dashboard", user.id] });

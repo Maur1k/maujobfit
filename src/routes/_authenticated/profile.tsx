@@ -90,7 +90,7 @@ function ProfilePage() {
       .from("profiles")
       .upsert({ id: user.id, ...payload }, { onConflict: "id" });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Profile saved");
     queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
   };
