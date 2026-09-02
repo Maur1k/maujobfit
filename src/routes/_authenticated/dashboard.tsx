@@ -90,9 +90,10 @@ function Dashboard() {
                 <Icon className="size-5 text-evidence" aria-hidden />
               </div>
               <div>
-                <p className="font-display text-2xl font-semibold">
+                <div className="font-display text-2xl font-semibold">
                   {isPending ? <Skeleton className="h-7 w-10" /> : value}
-                </p>
+                </div>
+
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
               </div>
             </CardContent>
