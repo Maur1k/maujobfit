@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { dateRange, sectionConfig } from "@/lib/master-resume";
+import { safeExternalUrl } from "@/lib/safe-url";
 import { itemHeadline, type ImportBullet, type ImportItem } from "@/lib/resume-import";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -298,9 +299,9 @@ export function ImportItemCard({
               ))}
             </div>
           )}
-          {item.url && (
+          {safeExternalUrl(item.url) && (
             <a
-              href={item.url}
+              href={safeExternalUrl(item.url)!}
               target="_blank"
               rel="noreferrer"
               className="inline-block font-mono text-xs text-evidence underline"
