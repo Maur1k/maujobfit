@@ -14,6 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
+      ats_analyses: {
+        Row: {
+          ai_used: boolean
+          analysed_items: number
+          created_at: string
+          id: string
+          job_id: string | null
+          keyword_score: number | null
+          matched_keywords: string[]
+          missing_keywords: string[]
+          overall_score: number | null
+          readability: Json
+          readability_score: number | null
+          related_keywords: string[]
+          requirement_findings: Json
+          requirement_score: number | null
+          suggestions: Json
+          tailored_resume_id: string
+          user_id: string
+        }
+        Insert: {
+          ai_used?: boolean
+          analysed_items?: number
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          keyword_score?: number | null
+          matched_keywords?: string[]
+          missing_keywords?: string[]
+          overall_score?: number | null
+          readability?: Json
+          readability_score?: number | null
+          related_keywords?: string[]
+          requirement_findings?: Json
+          requirement_score?: number | null
+          suggestions?: Json
+          tailored_resume_id: string
+          user_id: string
+        }
+        Update: {
+          ai_used?: boolean
+          analysed_items?: number
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          keyword_score?: number | null
+          matched_keywords?: string[]
+          missing_keywords?: string[]
+          overall_score?: number | null
+          readability?: Json
+          readability_score?: number | null
+          related_keywords?: string[]
+          requirement_findings?: Json
+          requirement_score?: number | null
+          suggestions?: Json
+          tailored_resume_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ats_analyses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ats_analyses_tailored_resume_id_fkey"
+            columns: ["tailored_resume_id"]
+            isOneToOne: false
+            referencedRelation: "tailored_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cover_letters: {
+        Row: {
+          closing: string
+          created_at: string
+          greeting: string
+          id: string
+          job_id: string | null
+          notes: string | null
+          opening: string
+          paragraphs: Json
+          recipient: string | null
+          signoff: string
+          status: string
+          tailored_resume_id: string
+          updated_at: string
+          user_id: string
+          validation_notes: Json
+          validation_status: string
+        }
+        Insert: {
+          closing?: string
+          created_at?: string
+          greeting?: string
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          opening?: string
+          paragraphs?: Json
+          recipient?: string | null
+          signoff?: string
+          status?: string
+          tailored_resume_id: string
+          updated_at?: string
+          user_id: string
+          validation_notes?: Json
+          validation_status?: string
+        }
+        Update: {
+          closing?: string
+          created_at?: string
+          greeting?: string
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          opening?: string
+          paragraphs?: Json
+          recipient?: string | null
+          signoff?: string
+          status?: string
+          tailored_resume_id?: string
+          updated_at?: string
+          user_id?: string
+          validation_notes?: Json
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cover_letters_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cover_letters_tailored_resume_id_fkey"
+            columns: ["tailored_resume_id"]
+            isOneToOne: false
+            referencedRelation: "tailored_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exports: {
         Row: {
           created_at: string
@@ -792,6 +939,85 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tailored_resume_items_tailored_resume_id_fkey"
+            columns: ["tailored_resume_id"]
+            isOneToOne: false
+            referencedRelation: "tailored_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tailored_resume_versions: {
+        Row: {
+          created_at: string
+          export_format: string | null
+          export_id: string | null
+          id: string
+          item_count: number
+          items: Json
+          job_id: string | null
+          label: string
+          notes: string | null
+          reason: string
+          snapshot_index: number
+          supported_count: number
+          supported_only: boolean
+          tailored_resume_id: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          export_format?: string | null
+          export_id?: string | null
+          id?: string
+          item_count?: number
+          items?: Json
+          job_id?: string | null
+          label: string
+          notes?: string | null
+          reason?: string
+          snapshot_index?: number
+          supported_count?: number
+          supported_only?: boolean
+          tailored_resume_id: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          export_format?: string | null
+          export_id?: string | null
+          id?: string
+          item_count?: number
+          items?: Json
+          job_id?: string | null
+          label?: string
+          notes?: string | null
+          reason?: string
+          snapshot_index?: number
+          supported_count?: number
+          supported_only?: boolean
+          tailored_resume_id?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tailored_resume_versions_export_id_fkey"
+            columns: ["export_id"]
+            isOneToOne: false
+            referencedRelation: "exports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tailored_resume_versions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tailored_resume_versions_tailored_resume_id_fkey"
             columns: ["tailored_resume_id"]
             isOneToOne: false
             referencedRelation: "tailored_resumes"

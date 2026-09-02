@@ -68,7 +68,7 @@ function formatDate(value: string | null | undefined) {
   return month ? `${month} ${match[1]}` : match[1]!;
 }
 
-function dateRange(start: string | null | undefined, end: string | null | undefined) {
+export function dateRange(start: string | null | undefined, end: string | null | undefined) {
   const from = formatDate(start);
   const to = formatDate(end);
   if (from && to) return `${from} – ${to}`;
@@ -93,7 +93,7 @@ const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   },
 ];
 
-function groupSkills(names: string[]) {
+export function groupSkills(names: string[]) {
   const explicit = new Map<string, string[]>();
   const explicitOrder: string[] = [];
   const inferred = new Map<string, string[]>();
