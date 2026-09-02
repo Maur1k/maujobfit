@@ -1,12 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, FileCheck2, Loader2, Quote, RefreshCcw, ShieldAlert, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  CircleHelp,
+  FileCheck2,
+  Loader2,
+  Quote,
+  RefreshCcw,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { generateTailoredResume } from "@/lib/tailoring.functions";
+import { validateTailoredResume } from "@/lib/validation.functions";
+import {
+  validationIssueLabel,
+  validationStatusLabel,
+  validationSummary,
+  type ValidationRow,
+} from "@/lib/validation";
 import {
   tailoredSectionLabel,
   TAILORED_SECTIONS,
@@ -61,6 +81,7 @@ function TailoredResumePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
+  const [validating, setValidating] = useState(false);
   const queryKey = ["tailored-resume", jobId, user?.id];
 
   const dataQuery = useQuery({
@@ -80,10 +101,17 @@ function TailoredResumePage() {
       if (resumes.error) throw new Error(resumes.error.message);
       const resume = (resumes.data?.[0] ?? null) as TailoredResumeRow | null;
       if (!resume) {
-        return { job: job.data, resume: null, items: [], sources: [], evidence: new Map<string, EvidenceLite>() };
+        return {
+          job: job.data,
+          resume: null,
+          items: [],
+          sources: [],
+          evidence: new Map<string, EvidenceLite>(),
+          validations: [] as ValidationRow[],
+        };
       }
 
-      const [items, sources] = await Promise.all([
+      const [items, sources, validations] = await Promise.all([
         supabase
           .from("tailored_resume_items")
           .select(
@@ -95,9 +123,16 @@ function TailoredResumePage() {
           .from("tailored_resume_item_sources")
           .select("id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt")
           .eq("user_id", user!.id),
+        supabase
+          .from("validation_results")
+          .select(
+            "id, tailored_resume_id, tailored_resume_item_id, check_type, severity, passed, message, status, rationale, confidence, evidence_ids, evidence_excerpts, unsupported_spans, issues, validator, run_at",
+          )
+          .eq("tailored_resume_id", resume.id),
       ]);
       if (items.error) throw new Error(items.error.message);
       if (sources.error) throw new Error(sources.error.message);
+      if (validations.error) throw new Error(validations.error.message);
 
       const itemIds = new Set((items.data ?? []).map((row) => row.id));
       const scopedSources = ((sources.data ?? []) as TailoredSourceRow[]).filter((row) =>
@@ -118,6 +153,7 @@ function TailoredResumePage() {
         items: (items.data ?? []) as TailoredItemRow[],
         sources: scopedSources,
         evidence: new Map(((evidence.data ?? []) as EvidenceLite[]).map((row) => [row.id, row])),
+        validations: (validations.data ?? []) as ValidationRow[],
       };
     },
     enabled: !!user,
@@ -137,6 +173,27 @@ function TailoredResumePage() {
       toast.error("The generation run failed. Please retry.");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const validate = async () => {
+    const resumeId = dataQuery.data?.resume?.id;
+    if (!resumeId) return;
+    setValidating(true);
+    try {
+      const result = await validateTailoredResume({ data: { tailoredResumeId: resumeId } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey });
+      toast.success(
+        `Validated ${result.checked} claims${result.aiUsed ? "" : " with deterministic checks only"}.`,
+      );
+    } catch {
+      toast.error("The validation run failed. Please retry.");
+    } finally {
+      setValidating(false);
     }
   };
 
@@ -163,7 +220,12 @@ function TailoredResumePage() {
     );
   }
 
-  const { job, resume, items, sources, evidence } = dataQuery.data;
+  const { job, resume, items, sources, evidence, validations } = dataQuery.data;
+  const validationByItem = new Map<string, ValidationRow>();
+  for (const row of validations) {
+    if (row.tailored_resume_item_id) validationByItem.set(row.tailored_resume_item_id, row);
+  }
+  const summary = validationSummary(validations.map((row) => ({ status: row.status })));
   const sourcesByItem = new Map<string, TailoredSourceRow[]>();
   for (const row of sources) {
     const list = sourcesByItem.get(row.tailored_resume_item_id) ?? [];
