@@ -186,9 +186,9 @@ function rationaleFor(
     relatedHits.length > 0 ? `carries adjacent, transferable evidence (${relatedHits.slice(0, 6).join(", ")})` : "";
   const matchNote =
     candidate.exactMatches > 0
-      ? `${candidate.exactMatches} requirement${candidate.exactMatches === 1 ? "" : "s"} are matched exactly by this evidence`
+      ? `${candidate.exactMatches} requirement${candidate.exactMatches === 1 ? " is" : "s are"} matched exactly by this evidence`
       : candidate.relatedMatches > 0
-        ? `${candidate.relatedMatches} requirement${candidate.relatedMatches === 1 ? "" : "s"} are supported indirectly`
+        ? `${candidate.relatedMatches} requirement${candidate.relatedMatches === 1 ? " is" : "s are"} supported indirectly`
         : "";
   const reasons = [overlap, adjacent, matchNote].filter(Boolean);
 
