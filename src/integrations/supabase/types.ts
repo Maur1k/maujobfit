@@ -261,6 +261,69 @@ export type Database = {
           },
         ]
       }
+      job_skill_relevance: {
+        Row: {
+          canonical_skill: string
+          created_at: string
+          id: string
+          job_id: string
+          master_resume_id: string
+          matched_requirement_ids: string[]
+          rationale: string
+          relevance: Database["public"]["Enums"]["skill_relevance"]
+          resume_evidence_ids: string[]
+          resume_item_ids: string[]
+          skill_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canonical_skill: string
+          created_at?: string
+          id?: string
+          job_id: string
+          master_resume_id: string
+          matched_requirement_ids?: string[]
+          rationale?: string
+          relevance: Database["public"]["Enums"]["skill_relevance"]
+          resume_evidence_ids?: string[]
+          resume_item_ids?: string[]
+          skill_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canonical_skill?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          master_resume_id?: string
+          matched_requirement_ids?: string[]
+          rationale?: string
+          relevance?: Database["public"]["Enums"]["skill_relevance"]
+          resume_evidence_ids?: string[]
+          resume_item_ids?: string[]
+          skill_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_skill_relevance_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_skill_relevance_master_resume_id_fkey"
+            columns: ["master_resume_id"]
+            isOneToOne: false
+            referencedRelation: "master_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           analysis_status: string
@@ -1177,7 +1240,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      skill_relevance: "exact" | "related" | "listed_only" | "not_relevant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1304,6 +1367,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      skill_relevance: ["exact", "related", "listed_only", "not_relevant"],
+    },
   },
 } as const

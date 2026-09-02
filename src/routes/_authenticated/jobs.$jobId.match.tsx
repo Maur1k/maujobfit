@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { computeJobMatch } from "@/lib/matching.functions";
+import { classifyMasterSkills } from "@/lib/skill-relevance.functions";
+import { SkillRelevancePanel, skillRelevanceQueryKey } from "@/components/jobs/SkillRelevancePanel";
 import { coverageSummary, matchStatusLabel, type MatchStatus } from "@/lib/matching";
 import { requirementTypeLabelPlural, type JobRequirementRow } from "@/lib/job-analysis";
 import { Button } from "@/components/ui/button";
@@ -132,7 +134,12 @@ function MatchReport() {
         toast.error(result.error);
         return;
       }
-      await queryClient.invalidateQueries({ queryKey: ["match-report", jobId, user?.id] });
+      // Job-scoped relevance layer: classifies master skills without touching them.
+      await classifyMasterSkills({ data: { jobId } }).catch(() => null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["match-report", jobId, user?.id] }),
+        queryClient.invalidateQueries({ queryKey: skillRelevanceQueryKey(jobId, user?.id) }),
+      ]);
       toast.success(`Matched ${result.requirementCount} requirements against your master resume.`);
     } catch {
       toast.error("The match run failed. Please retry.");
@@ -204,6 +211,11 @@ function MatchReport() {
                 Tailored resume
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link to="/jobs/$jobId/preview" params={{ jobId }}>
+                Draft preview
+              </Link>
+            </Button>
             <Button variant="outline" disabled={running} onClick={() => void run()}>
               {running ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -256,6 +268,10 @@ function MatchReport() {
           </p>
         </div>
       )}
+
+      <SkillRelevancePanel jobId={jobId} />
+
+
 
       {REQUIREMENT_ORDER.map((type) => {
         const rows = requirements.filter((requirement) => requirement.requirement_type === type);

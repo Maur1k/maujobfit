@@ -21,6 +21,7 @@ import { Route as AuthenticatedJobsJobIdIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedJobsJobIdAtsRouteImport } from './routes/_authenticated/jobs.$jobId.ats'
 import { Route as AuthenticatedJobsJobIdCoverLetterRouteImport } from './routes/_authenticated/jobs.$jobId.cover-letter'
 import { Route as AuthenticatedJobsJobIdMatchRouteImport } from './routes/_authenticated/jobs.$jobId.match'
+import { Route as AuthenticatedJobsJobIdPreviewRouteImport } from './routes/_authenticated/jobs.$jobId.preview'
 import { Route as AuthenticatedJobsJobIdTailoredRouteImport } from './routes/_authenticated/jobs.$jobId.tailored'
 import { Route as AuthenticatedJobsJobIdVersionsRouteImport } from './routes/_authenticated/jobs.$jobId.versions'
 
@@ -88,6 +89,12 @@ const AuthenticatedJobsJobIdMatchRoute =
     path: '/jobs/$jobId/match',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedJobsJobIdPreviewRoute =
+  AuthenticatedJobsJobIdPreviewRouteImport.update({
+    id: '/jobs/$jobId/preview',
+    path: '/jobs/$jobId/preview',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedJobsJobIdTailoredRoute =
   AuthenticatedJobsJobIdTailoredRouteImport.update({
     id: '/jobs/$jobId/tailored',
@@ -112,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/jobs/$jobId/ats': typeof AuthenticatedJobsJobIdAtsRoute
   '/jobs/$jobId/cover-letter': typeof AuthenticatedJobsJobIdCoverLetterRoute
   '/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
+  '/jobs/$jobId/preview': typeof AuthenticatedJobsJobIdPreviewRoute
   '/jobs/$jobId/tailored': typeof AuthenticatedJobsJobIdTailoredRoute
   '/jobs/$jobId/versions': typeof AuthenticatedJobsJobIdVersionsRoute
   '/jobs/$jobId/': typeof AuthenticatedJobsJobIdIndexRoute
@@ -127,6 +135,7 @@ export interface FileRoutesByTo {
   '/jobs/$jobId/ats': typeof AuthenticatedJobsJobIdAtsRoute
   '/jobs/$jobId/cover-letter': typeof AuthenticatedJobsJobIdCoverLetterRoute
   '/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
+  '/jobs/$jobId/preview': typeof AuthenticatedJobsJobIdPreviewRoute
   '/jobs/$jobId/tailored': typeof AuthenticatedJobsJobIdTailoredRoute
   '/jobs/$jobId/versions': typeof AuthenticatedJobsJobIdVersionsRoute
   '/jobs/$jobId': typeof AuthenticatedJobsJobIdIndexRoute
@@ -144,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/jobs/$jobId/ats': typeof AuthenticatedJobsJobIdAtsRoute
   '/_authenticated/jobs/$jobId/cover-letter': typeof AuthenticatedJobsJobIdCoverLetterRoute
   '/_authenticated/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
+  '/_authenticated/jobs/$jobId/preview': typeof AuthenticatedJobsJobIdPreviewRoute
   '/_authenticated/jobs/$jobId/tailored': typeof AuthenticatedJobsJobIdTailoredRoute
   '/_authenticated/jobs/$jobId/versions': typeof AuthenticatedJobsJobIdVersionsRoute
   '/_authenticated/jobs/$jobId/': typeof AuthenticatedJobsJobIdIndexRoute
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId/ats'
     | '/jobs/$jobId/cover-letter'
     | '/jobs/$jobId/match'
+    | '/jobs/$jobId/preview'
     | '/jobs/$jobId/tailored'
     | '/jobs/$jobId/versions'
     | '/jobs/$jobId/'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId/ats'
     | '/jobs/$jobId/cover-letter'
     | '/jobs/$jobId/match'
+    | '/jobs/$jobId/preview'
     | '/jobs/$jobId/tailored'
     | '/jobs/$jobId/versions'
     | '/jobs/$jobId'
@@ -192,6 +204,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs/$jobId/ats'
     | '/_authenticated/jobs/$jobId/cover-letter'
     | '/_authenticated/jobs/$jobId/match'
+    | '/_authenticated/jobs/$jobId/preview'
     | '/_authenticated/jobs/$jobId/tailored'
     | '/_authenticated/jobs/$jobId/versions'
     | '/_authenticated/jobs/$jobId/'
@@ -289,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsJobIdMatchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/jobs/$jobId/preview': {
+      id: '/_authenticated/jobs/$jobId/preview'
+      path: '/jobs/$jobId/preview'
+      fullPath: '/jobs/$jobId/preview'
+      preLoaderRoute: typeof AuthenticatedJobsJobIdPreviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/jobs/$jobId/tailored': {
       id: '/_authenticated/jobs/$jobId/tailored'
       path: '/jobs/$jobId/tailored'
@@ -315,6 +335,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJobsJobIdAtsRoute: typeof AuthenticatedJobsJobIdAtsRoute
   AuthenticatedJobsJobIdCoverLetterRoute: typeof AuthenticatedJobsJobIdCoverLetterRoute
   AuthenticatedJobsJobIdMatchRoute: typeof AuthenticatedJobsJobIdMatchRoute
+  AuthenticatedJobsJobIdPreviewRoute: typeof AuthenticatedJobsJobIdPreviewRoute
   AuthenticatedJobsJobIdTailoredRoute: typeof AuthenticatedJobsJobIdTailoredRoute
   AuthenticatedJobsJobIdVersionsRoute: typeof AuthenticatedJobsJobIdVersionsRoute
   AuthenticatedJobsJobIdIndexRoute: typeof AuthenticatedJobsJobIdIndexRoute
@@ -330,6 +351,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJobsJobIdCoverLetterRoute:
     AuthenticatedJobsJobIdCoverLetterRoute,
   AuthenticatedJobsJobIdMatchRoute: AuthenticatedJobsJobIdMatchRoute,
+  AuthenticatedJobsJobIdPreviewRoute: AuthenticatedJobsJobIdPreviewRoute,
   AuthenticatedJobsJobIdTailoredRoute: AuthenticatedJobsJobIdTailoredRoute,
   AuthenticatedJobsJobIdVersionsRoute: AuthenticatedJobsJobIdVersionsRoute,
   AuthenticatedJobsJobIdIndexRoute: AuthenticatedJobsJobIdIndexRoute,
