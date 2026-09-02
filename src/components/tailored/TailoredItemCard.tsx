@@ -373,7 +373,7 @@ export function TailoredItemCard({ item, sources, evidence, validation, onChange
               )}
             </Button>
           </DialogFooter>
-        </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );
