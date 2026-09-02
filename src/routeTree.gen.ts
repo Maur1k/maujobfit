@@ -14,9 +14,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
-import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
 import { Route as AuthenticatedMasterResumeRouteImport } from './routes/_authenticated/master-resume'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,11 +42,6 @@ const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedMasterResumeRoute =
   AuthenticatedMasterResumeRouteImport.update({
     id: '/master-resume',
@@ -58,24 +53,29 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
-  '/jobs': typeof AuthenticatedJobsRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/jobs/': typeof AuthenticatedJobsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
-  '/jobs': typeof AuthenticatedJobsRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/jobs': typeof AuthenticatedJobsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,9 +84,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
-  '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/master-resume': typeof AuthenticatedMasterResumeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -95,18 +95,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/import'
-    | '/jobs'
     | '/master-resume'
     | '/profile'
+    | '/jobs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/dashboard'
     | '/import'
-    | '/jobs'
     | '/master-resume'
     | '/profile'
+    | '/jobs'
   id:
     | '__root__'
     | '/'
@@ -114,9 +114,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/import'
-    | '/_authenticated/jobs'
     | '/_authenticated/master-resume'
     | '/_authenticated/profile'
+    | '/_authenticated/jobs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,13 +162,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/jobs': {
-      id: '/_authenticated/jobs'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof AuthenticatedJobsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/master-resume': {
       id: '/_authenticated/master-resume'
       path: '/master-resume'
@@ -183,23 +176,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/jobs/': {
+      id: '/_authenticated/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs/'
+      preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
-  AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedMasterResumeRoute: typeof AuthenticatedMasterResumeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
-  AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedMasterResumeRoute: AuthenticatedMasterResumeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
