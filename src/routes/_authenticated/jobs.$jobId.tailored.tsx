@@ -44,6 +44,7 @@ import {
   type EvidenceLite,
 } from "@/components/tailored/TailoredItemCard";
 import { buildTailoredResumePdf } from "@/lib/resume-pdf";
+import { buildProfessionalResumePdf, type ProEvidence } from "@/lib/resume-pdf-professional";
 
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/tailored")({
   head: () => ({
@@ -142,7 +143,7 @@ function TailoredResumePage() {
       const evidence = evidenceIds.length
         ? await supabase
             .from("resume_evidence")
-            .select("id, category, title, organization, role, start_date, end_date, content")
+            .select("id, category, title, organization, role, start_date, end_date, content, skills")
             .in("id", evidenceIds)
         : { data: [], error: null };
       if (evidence.error) throw new Error(evidence.error.message);
