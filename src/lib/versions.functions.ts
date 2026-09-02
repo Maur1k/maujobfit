@@ -78,6 +78,19 @@ export async function captureSnapshot(
     return { snapshotId: latest.id as string, skipped: true, itemCount: snapshot.length };
   }
 
+  // export_id arrives from the client: only accept one that belongs to this account.
+  let exportId: string | null = args.exportId ?? null;
+  if (exportId) {
+    const { data: exportRow, error: exportError } = await supabase
+      .from("exports")
+      .select("id")
+      .eq("id", exportId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (exportError) throw new Error(exportError.message);
+    if (!exportRow) exportId = null;
+  }
+
   const snapshotIndex = (latest?.snapshot_index ?? 0) + 1;
   const supportedCount = snapshot.filter((row) => row.validation_status === "supported").length;
 
@@ -95,7 +108,7 @@ export async function captureSnapshot(
       item_count: snapshot.length,
       supported_count: supportedCount,
       items: snapshot,
-      export_id: args.exportId ?? null,
+      export_id: exportId,
       export_format: args.exportFormat ?? null,
       notes: args.notes ?? null,
     })
