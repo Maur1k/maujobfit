@@ -60,7 +60,7 @@ type Props = {
   sources: TailoredSourceRow[];
   evidence: Map<string, EvidenceLite>;
   validation?: ValidationRow | undefined;
-  onChanged: () => Promise<void> | void;
+  onChanged: (reason: "item_edited" | "rewrite_accepted") => Promise<void> | void;
 };
 
 export function TailoredItemCard({ item, sources, evidence, validation, onChanged }: Props) {
@@ -81,10 +81,10 @@ export function TailoredItemCard({ item, sources, evidence, validation, onChange
     rationale: string;
   } | null>(null);
 
-  const persist = async (statement: string) => {
+  const persist = async (statement: string, reason: "item_edited" | "rewrite_accepted") => {
     const result = await saveTailoredItem({ data: { itemId: item.id, statement } });
     if (!result.ok) throw new Error(result.error);
-    await onChanged();
+    await onChanged(reason);
     toast.success(`Saved and re-validated — now ${validationStatusLabel[result.status] ?? result.status}.`);
   };
 
@@ -97,7 +97,7 @@ export function TailoredItemCard({ item, sources, evidence, validation, onChange
     setSaving(true);
     setSaveError(null);
     try {
-      await persist(statement);
+      await persist(statement, "item_edited");
       setEditOpen(false);
       setProposal(null);
     } catch (error) {
@@ -133,7 +133,7 @@ export function TailoredItemCard({ item, sources, evidence, validation, onChange
     if (!proposal?.possible) return;
     setSaving(true);
     try {
-      await persist(proposal.statement);
+      await persist(proposal.statement, "rewrite_accepted");
       setProposal(null);
     } catch (error) {
       setRewriteError(error instanceof Error ? error.message : "Saving the rewrite failed. Please retry.");

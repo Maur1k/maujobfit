@@ -44,6 +44,7 @@ import {
   type EvidenceLite,
 } from "@/components/tailored/TailoredItemCard";
 import { buildTailoredResumePdf } from "@/lib/resume-pdf";
+import { snapshotTailoredResume } from "@/lib/versions.functions";
 import { buildProfessionalResumePdf, type ProEvidence } from "@/lib/resume-pdf-professional";
 
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/tailored")({
@@ -74,7 +75,7 @@ function TailoredResumePage() {
   const [generating, setGenerating] = useState(false);
   const [validating, setValidating] = useState(false);
   const [supportedOnly, setSupportedOnly] = useState(false);
-  const [exporting, setExporting] = useState<"professional" | "audit" | null>(null);
+  const [exporting, setExporting] = useState<"professional" | "audit" | "docx" | null>(null);
   const queryKey = ["tailored-resume", jobId, user?.id];
 
   const dataQuery = useQuery({
@@ -168,6 +169,16 @@ function TailoredResumePage() {
       if (!result.ok) {
         toast.error(result.error);
         return;
+      }
+      if (result.tailoredResumeId) {
+        await snapshotTailoredResume({
+          data: {
+            tailoredResumeId: result.tailoredResumeId,
+            reason: "generated",
+            label: `v${result.version} · generated`,
+            notes: `${result.itemCount} items with ${result.sourceCount} citations.`,
+          },
+        }).catch(() => null);
       }
       await queryClient.invalidateQueries({ queryKey });
       toast.success(`Generated v${result.version} — ${result.itemCount} items with ${result.sourceCount} citations.`);
@@ -276,17 +287,93 @@ function TailoredResumePage() {
 
       download(blob, fileName);
 
-      const { error } = await supabase.from("exports").insert({
-        user_id: user!.id,
-        tailored_resume_id: resume.id,
-        format: "pdf",
-        file_name: fileName,
-        status: "downloaded_professional_supported_only",
-      });
+      const { data: exportRow, error } = await supabase
+        .from("exports")
+        .insert({
+          user_id: user!.id,
+          tailored_resume_id: resume.id,
+          format: "pdf",
+          file_name: fileName,
+          status: "downloaded_professional_supported_only",
+        })
+        .select("id")
+        .maybeSingle();
       if (error) throw new Error(error.message);
+
+      await snapshotTailoredResume({
+        data: {
+          tailoredResumeId: resume.id,
+          reason: "export",
+          label: `v${resume.version} · PDF export`,
+          supportedOnly: true,
+          exportId: exportRow?.id ?? null,
+          exportFormat: "pdf",
+          notes: `Application-ready PDF with ${supportedItems.length} supported claims.`,
+        },
+      }).catch(() => null);
+
       toast.success(`Professional resume exported with ${supportedItems.length} supported claims.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const professionalItems = () =>
+    supportedItems.map((item) => ({
+      id: item.id,
+      section: item.section,
+      heading: item.heading,
+      statement: item.statement,
+      evidenceIds: (sourcesByItem.get(item.id) ?? [])
+        .slice()
+        .sort((a, b) => (a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0))
+        .map((source) => source.resume_evidence_id),
+    }));
+
+  const exportProfessionalDocx = async () => {
+    if (!resume) return;
+    setExporting("docx");
+    try {
+      const { buildProfessionalResumeDocx } = await import("@/lib/resume-docx-professional");
+      const built = buildProfessionalResumeDocx({
+        profile: profile ?? null,
+        jobTitle: job.title ?? null,
+        version: resume.version,
+        evidence: evidence as unknown as Map<string, ProEvidence>,
+        items: professionalItems(),
+      });
+      download(await built.blob(), built.fileName);
+
+      const { data: exportRow, error } = await supabase
+        .from("exports")
+        .insert({
+          user_id: user!.id,
+          tailored_resume_id: resume.id,
+          format: "docx",
+          file_name: built.fileName,
+          status: "downloaded_professional_supported_only",
+        })
+        .select("id")
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+
+      await snapshotTailoredResume({
+        data: {
+          tailoredResumeId: resume.id,
+          reason: "export",
+          label: `v${resume.version} · Word export`,
+          supportedOnly: true,
+          exportId: exportRow?.id ?? null,
+          exportFormat: "docx",
+          notes: `Application-ready Word document with ${supportedItems.length} supported claims.`,
+        },
+      }).catch(() => null);
+
+      toast.success(`Word document exported with ${supportedItems.length} supported claims.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The Word export failed. Please retry.");
     } finally {
       setExporting(null);
     }
@@ -521,6 +608,28 @@ function TailoredResumePage() {
                       </>
                     )}
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="mt-2 w-full"
+                    disabled={exporting !== null || supportedItems.length === 0}
+                    onClick={() => void exportProfessionalDocx()}
+                  >
+                    {exporting === "docx" ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Building Word document…
+                      </>
+                    ) : (
+                      <>
+                        <Download className="size-4" aria-hidden />
+                        Download Word (.docx)
+                      </>
+                    )}
+                  </Button>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    The Word version mirrors the same layout and content, and stays fully editable in Microsoft Word and
+                    Google Docs.
+                  </p>
                   {supportedItems.length === 0 ? (
                     <p className="mt-2 text-xs text-amber-600">
                       No claim is validated as supported yet, so there is nothing application-ready to export. Validate
@@ -559,6 +668,24 @@ function TailoredResumePage() {
                   </Button>
                 </div>
               </div>
+
+              <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/jobs/$jobId/ats" params={{ jobId }}>
+                    ATS &amp; readability check
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/jobs/$jobId/cover-letter" params={{ jobId }}>
+                    Cover letter
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/jobs/$jobId/versions" params={{ jobId }}>
+                    Version history
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
           </Card>
 
@@ -594,7 +721,16 @@ function TailoredResumePage() {
                       sources={sourcesByItem.get(item.id) ?? []}
                       evidence={evidence}
                       validation={validationByItem.get(item.id)}
-                      onChanged={() => queryClient.invalidateQueries({ queryKey })}
+                      onChanged={async (reason) => {
+                        await snapshotTailoredResume({
+                          data: {
+                            tailoredResumeId: resume!.id,
+                            reason,
+                            label: `v${resume!.version} · ${reason === "rewrite_accepted" ? "rewrite accepted" : "item edited"}`,
+                          },
+                        }).catch(() => null);
+                        await queryClient.invalidateQueries({ queryKey });
+                      }}
                     />
                   ))}
                 </CardContent>
