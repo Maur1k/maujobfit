@@ -286,12 +286,15 @@ export type Database = {
           content: string
           created_at: string
           end_date: string | null
+          evidence_kind: string
           id: string
           location: string | null
           master_resume_id: string
           metrics: Json
           organization: string | null
           resume_import_id: string | null
+          resume_item_bullet_id: string | null
+          resume_item_id: string | null
           role: string | null
           skills: string[]
           sort_order: number
@@ -308,12 +311,15 @@ export type Database = {
           content: string
           created_at?: string
           end_date?: string | null
+          evidence_kind?: string
           id?: string
           location?: string | null
           master_resume_id: string
           metrics?: Json
           organization?: string | null
           resume_import_id?: string | null
+          resume_item_bullet_id?: string | null
+          resume_item_id?: string | null
           role?: string | null
           skills?: string[]
           sort_order?: number
@@ -330,12 +336,15 @@ export type Database = {
           content?: string
           created_at?: string
           end_date?: string | null
+          evidence_kind?: string
           id?: string
           location?: string | null
           master_resume_id?: string
           metrics?: Json
           organization?: string | null
           resume_import_id?: string | null
+          resume_item_bullet_id?: string | null
+          resume_item_id?: string | null
           role?: string | null
           skills?: string[]
           sort_order?: number
@@ -360,6 +369,20 @@ export type Database = {
             columns: ["resume_import_id"]
             isOneToOne: false
             referencedRelation: "resume_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resume_evidence_resume_item_bullet_id_fkey"
+            columns: ["resume_item_bullet_id"]
+            isOneToOne: false
+            referencedRelation: "resume_item_bullets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resume_evidence_resume_item_id_fkey"
+            columns: ["resume_item_id"]
+            isOneToOne: false
+            referencedRelation: "resume_items"
             referencedColumns: ["id"]
           },
         ]
@@ -413,6 +436,109 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "resume_imports_master_resume_id_fkey"
+            columns: ["master_resume_id"]
+            isOneToOne: false
+            referencedRelation: "master_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resume_item_bullets: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          resume_item_id: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          resume_item_id: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          resume_item_id?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_item_bullets_resume_item_id_fkey"
+            columns: ["resume_item_id"]
+            isOneToOne: false
+            referencedRelation: "resume_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resume_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          master_resume_id: string
+          organization: string | null
+          role: string | null
+          section: string
+          skills: string[]
+          sort_order: number
+          start_date: string | null
+          title: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          master_resume_id: string
+          organization?: string | null
+          role?: string | null
+          section: string
+          skills?: string[]
+          sort_order?: number
+          start_date?: string | null
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          master_resume_id?: string
+          organization?: string | null
+          role?: string | null
+          section?: string
+          skills?: string[]
+          sort_order?: number
+          start_date?: string | null
+          title?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_items_master_resume_id_fkey"
             columns: ["master_resume_id"]
             isOneToOne: false
             referencedRelation: "master_resumes"
