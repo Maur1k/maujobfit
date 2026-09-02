@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { IMPORT_SECTIONS } from "@/lib/resume-import";
+import { MAX_IMPORT_BYTES, isPdfMimeType, validatePdfBytes } from "@/lib/pdf-validation";
+
 
 const extractionSchema = z.object({
   profile: z
