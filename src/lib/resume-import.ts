@@ -79,7 +79,7 @@ export const PROFILE_FIELDS = [
   { key: "linkedin_url", label: "LinkedIn" },
 ] as const;
 
-export const MAX_IMPORT_BYTES = 15 * 1024 * 1024;
+export { MAX_IMPORT_BYTES } from "./pdf-validation";
 
 export function normaliseBullets(value: unknown): ImportBullet[] {
   if (!Array.isArray(value)) return [];
