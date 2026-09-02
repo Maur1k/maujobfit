@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, RefreshCcw, ScanSearch
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { safeExternalUrl } from "@/lib/safe-url";
 import { useAuth } from "@/hooks/use-auth";
 import { analyzeJobDescription } from "@/lib/job-analysis.functions";
 import {
@@ -185,9 +186,9 @@ function JobDetail() {
             </Button>
           </div>
         </div>
-        {job.source_url ? (
+        {safeExternalUrl(job.source_url) ? (
           <a
-            href={job.source_url}
+            href={safeExternalUrl(job.source_url)!}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"

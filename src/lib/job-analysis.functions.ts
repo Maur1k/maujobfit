@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { safeExternalUrl } from "@/lib/safe-url";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   MAX_JOB_TEXT_LENGTH,
@@ -55,8 +56,8 @@ export const analyzeJobDescription = createServerFn({ method: "POST" })
   .inputValidator((data: { rawText: string; sourceUrl?: string | null; jobId?: string | null }) =>
     z
       .object({
-        rawText: z.string(),
-        sourceUrl: z.string().nullish(),
+        rawText: z.string().max(60000),
+        sourceUrl: z.string().max(2048).nullish(),
         jobId: z.string().uuid().nullish(),
       })
       .parse(data),
@@ -64,6 +65,8 @@ export const analyzeJobDescription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const raw = data.rawText.replace(/\u0000/g, "").trim();
+    // Only plain http(s) links are stored; anything else (javascript:, data:) is dropped.
+    const sourceUrl = safeExternalUrl(data.sourceUrl);
 
     if (raw.replace(/\s+/g, "").length < MIN_JOB_TEXT_LENGTH) {
       return {
@@ -89,7 +92,7 @@ export const analyzeJobDescription = createServerFn({ method: "POST" })
         .from("jobs")
         .update({
           raw_text: text,
-          source_url: data.sourceUrl ?? null,
+          source_url: sourceUrl,
           analysis_status: "analyzing",
           error_message: null,
         })
@@ -102,7 +105,7 @@ export const analyzeJobDescription = createServerFn({ method: "POST" })
           user_id: userId,
           title: "Untitled job",
           raw_text: text,
-          source_url: data.sourceUrl ?? null,
+          source_url: sourceUrl,
           analysis_status: "analyzing",
           status: "saved",
         })
