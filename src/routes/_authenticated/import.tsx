@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseResumeImport } from "@/lib/resume-import.functions";
+import { validatePdfBytes } from "@/lib/pdf-validation";
+
 import {
   IMPORT_SECTIONS,
   MAX_IMPORT_BYTES,
