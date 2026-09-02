@@ -152,3 +152,18 @@
     color: var(--color-foreground);
   }
 }
+
+.dark {
+  --evidence: oklch(0.72 0.14 158);
+  --evidence-foreground: oklch(0.18 0.03 250);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
