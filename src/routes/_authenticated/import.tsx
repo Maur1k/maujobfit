@@ -220,7 +220,7 @@ function ImportPage() {
 
   const setImportField = async (values: Record<string, unknown>) => {
     if (!row) return;
-    const { error } = await supabase.from("resume_imports").update(values).eq("id", row.id);
+    const { error } = await supabase.from("resume_imports").update(values as never).eq("id", row.id);
     if (error) {
       toast.error(error.message);
       return;
@@ -260,7 +260,7 @@ function ImportPage() {
           if (typeof value === "string" && value.trim()) patch[key] = value.trim();
         }
         if (Object.keys(patch).length > 0) {
-          const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
+          const { error } = await supabase.from("profiles").update(patch as never).eq("id", user.id);
           if (error) throw new Error(error.message);
         }
       }

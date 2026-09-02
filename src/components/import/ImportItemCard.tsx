@@ -72,7 +72,7 @@ export function ImportItemCard({
 
   const patch = async (values: Record<string, unknown>) => {
     setSaving(true);
-    const { error } = await supabase.from("resume_import_items").update(values).eq("id", item.id);
+    const { error } = await supabase.from("resume_import_items").update(values as never).eq("id", item.id);
     setSaving(false);
     if (error) {
       toast.error(error.message);
