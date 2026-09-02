@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 
-import type { ProProfile } from "@/lib/resume-pdf-professional";
+import { PAGE_DIMENSIONS, type ProProfile } from "@/lib/resume-pdf-professional";
 
 /**
  * Recruiter-facing cover-letter renderer.
@@ -20,19 +20,20 @@ export type BuildCoverLetterPdfInput = {
   body: string[];
   signoff: string;
   date?: Date;
+  paperSize?: "a4" | "letter";
 };
-
-const PAGE_W = 595.28;
-const PAGE_H = 841.89;
-const MARGIN_X = 52;
-const MARGIN_Y = 48;
-const BODY_W = PAGE_W - MARGIN_X * 2;
 
 const INK: [number, number, number] = [22, 22, 26];
 const MUTED: [number, number, number] = [102, 102, 110];
 
 export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
-  const doc = new jsPDF({ unit: "pt", format: "a4", compress: true });
+  const paperSize = input.paperSize ?? "letter";
+  const { width: PAGE_W, height: PAGE_H } = PAGE_DIMENSIONS[paperSize];
+  const MARGIN_X = 52;
+  const MARGIN_Y = 48;
+  const BODY_W = PAGE_W - MARGIN_X * 2;
+
+  const doc = new jsPDF({ unit: "pt", format: paperSize, compress: true });
   let y = MARGIN_Y;
 
   const setFont = (size: number, style: "normal" | "bold" | "italic" = "normal", color = INK) => {
@@ -50,7 +51,13 @@ export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
 
   const block = (
     value: string,
-    opts: { size?: number; style?: "normal" | "bold" | "italic"; color?: [number, number, number]; leading?: number; gap?: number } = {},
+    opts: {
+      size?: number;
+      style?: "normal" | "bold" | "italic";
+      color?: [number, number, number];
+      leading?: number;
+      gap?: number;
+    } = {},
   ) => {
     const size = opts.size ?? 10.2;
     const style = opts.style ?? "normal";
@@ -83,10 +90,22 @@ export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
     y += 17;
   }
 
-  const contactPrimary = [input.profile?.email, input.profile?.phone, input.profile?.location].filter(Boolean) as string[];
-  const contactSecondary = [input.profile?.linkedin_url, input.profile?.github_url, input.profile?.portfolio_url]
+  const contactPrimary = [
+    input.profile?.email,
+    input.profile?.phone,
+    input.profile?.location,
+  ].filter(Boolean) as string[];
+  const contactSecondary = [
+    input.profile?.linkedin_url,
+    input.profile?.github_url,
+    input.profile?.portfolio_url,
+  ]
     .filter(Boolean)
-    .map((value) => String(value).replace(/^https?:\/\//, "").replace(/\/$/, ""));
+    .map((value) =>
+      String(value)
+        .replace(/^https?:\/\//, "")
+        .replace(/\/$/, ""),
+    );
   for (const line of [contactPrimary, contactSecondary]) {
     if (line.length === 0) continue;
     block(line.join("   ·   "), { size: 9, color: MUTED, leading: 12.5 });
@@ -100,11 +119,19 @@ export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
   y += 18;
 
   // ---------- Date & addressee ----------
-  const date = (input.date ?? new Date()).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const date = (input.date ?? new Date()).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
   block(date, { size: 9.4, color: MUTED, leading: 13, gap: 6 });
 
-  const addressee = [input.recipient || input.jobCompany, input.jobTitle ? `Re: ${input.jobTitle}` : null].filter(Boolean) as string[];
-  for (const line of addressee) block(line, { size: 10, style: line.startsWith("Re:") ? "normal" : "bold", leading: 13.5 });
+  const addressee = [
+    input.recipient || input.jobCompany,
+    input.jobTitle ? `Re: ${input.jobTitle}` : null,
+  ].filter(Boolean) as string[];
+  for (const line of addressee)
+    block(line, { size: 10, style: line.startsWith("Re:") ? "normal" : "bold", leading: 13.5 });
   if (addressee.length) y += 8;
 
   // ---------- Letter ----------
@@ -124,5 +151,8 @@ export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
     .replace(/^-|-$/g, "")
     .toLowerCase();
 
-  return { blob: doc.output("blob") as Blob, fileName: `${slug || "cover-letter"}-cover-letter.pdf` };
+  return {
+    blob: doc.output("blob") as Blob,
+    fileName: `${slug || "cover-letter"}-cover-letter.pdf`,
+  };
 }

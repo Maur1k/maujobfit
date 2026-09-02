@@ -9,6 +9,7 @@ import { saveTailoringSettings } from "@/lib/composition.functions";
 import {
   DEFAULT_TAILORING_SETTINGS,
   normaliseSettings,
+  PAPER_SIZE_OPTIONS,
   PROJECT_INCLUSION_OPTIONS,
   RESUME_LENGTH_OPTIONS,
   SECTION_TOGGLES,
@@ -47,7 +48,9 @@ function ChoiceGroup({
   return (
     <fieldset className="rounded-lg border bg-background p-4">
       <legend className="px-1 text-sm font-medium">{title}</legend>
-      <p className="mb-3 text-xs text-muted-foreground">{hint} Pick one — the choices are mutually exclusive.</p>
+      <p className="mb-3 text-xs text-muted-foreground">
+        {hint} Pick one — the choices are mutually exclusive.
+      </p>
       <RadioGroup value={value} onValueChange={onChange} className="gap-2">
         {options.map((option) => (
           <div key={option.value} className="flex items-start gap-3">
@@ -112,7 +115,8 @@ export function TailoringSettingsCard({
     }
   };
 
-  const dirty = JSON.stringify(draft) !== JSON.stringify(settingsQuery.data ?? DEFAULT_TAILORING_SETTINGS);
+  const dirty =
+    JSON.stringify(draft) !== JSON.stringify(settingsQuery.data ?? DEFAULT_TAILORING_SETTINGS);
 
   return (
     <Card>
@@ -124,13 +128,22 @@ export function TailoringSettingsCard({
               Tailoring settings
             </CardTitle>
             <CardDescription>
-              These choices drive composition only — how much of your Master Resume is presented for this job and in
-              what order. Nothing here edits, reorders or deletes master-resume records, and saved versions keep the
-              settings that produced them.
+              These choices drive composition only — how much of your Master Resume is presented for
+              this job and in what order. Nothing here edits, reorders or deletes master-resume
+              records, and saved versions keep the settings that produced them.
             </CardDescription>
           </div>
-          <Button size="sm" variant={dirty ? "default" : "outline"} disabled={saving} onClick={() => void save()}>
-            {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Save className="size-4" aria-hidden />}
+          <Button
+            size="sm"
+            variant={dirty ? "default" : "outline"}
+            disabled={saving}
+            onClick={() => void save()}
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Save className="size-4" aria-hidden />
+            )}
             {dirty ? "Save settings" : "Saved"}
           </Button>
         </div>
@@ -147,7 +160,19 @@ export function TailoringSettingsCard({
                 hint="Sets the space budget."
                 options={RESUME_LENGTH_OPTIONS}
                 value={draft.resume_length}
-                onChange={(value) => setDraft({ ...draft, resume_length: value as TailoringSettings["resume_length"] })}
+                onChange={(value) =>
+                  setDraft({ ...draft, resume_length: value as TailoringSettings["resume_length"] })
+                }
+              />
+              <ChoiceGroup
+                id="paper-size"
+                title="Paper size"
+                hint="Target document page dimensions for export."
+                options={PAPER_SIZE_OPTIONS}
+                value={draft.paper_size}
+                onChange={(value) =>
+                  setDraft({ ...draft, paper_size: value as TailoringSettings["paper_size"] })
+                }
               />
               <ChoiceGroup
                 id="tailoring-level"
@@ -156,7 +181,10 @@ export function TailoringSettingsCard({
                 options={TAILORING_LEVEL_OPTIONS}
                 value={draft.tailoring_level}
                 onChange={(value) =>
-                  setDraft({ ...draft, tailoring_level: value as TailoringSettings["tailoring_level"] })
+                  setDraft({
+                    ...draft,
+                    tailoring_level: value as TailoringSettings["tailoring_level"],
+                  })
                 }
               />
               <ChoiceGroup
@@ -166,7 +194,10 @@ export function TailoringSettingsCard({
                 options={PROJECT_INCLUSION_OPTIONS}
                 value={draft.project_inclusion}
                 onChange={(value) =>
-                  setDraft({ ...draft, project_inclusion: value as TailoringSettings["project_inclusion"] })
+                  setDraft({
+                    ...draft,
+                    project_inclusion: value as TailoringSettings["project_inclusion"],
+                  })
                 }
               />
               <ChoiceGroup
@@ -175,14 +206,17 @@ export function TailoringSettingsCard({
                 hint="Technical Skills is never reduced to exact job terms; this sets how wide it goes."
                 options={SKILLS_SCOPE_OPTIONS}
                 value={draft.skills_scope}
-                onChange={(value) => setDraft({ ...draft, skills_scope: value as TailoringSettings["skills_scope"] })}
+                onChange={(value) =>
+                  setDraft({ ...draft, skills_scope: value as TailoringSettings["skills_scope"] })
+                }
               />
             </div>
 
             <fieldset className="rounded-lg border bg-secondary/30 p-4">
               <legend className="px-1 text-sm font-medium">Sections</legend>
               <p className="mb-3 text-xs text-muted-foreground">
-                All sections are retained by default. Turning one off affects this job's tailored versions only.
+                All sections are retained by default. Turning one off affects this job's tailored
+                versions only.
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {SECTION_TOGGLES.map((toggle) => (

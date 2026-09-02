@@ -1,7 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowLeft, FileDown, Loader2, Mail, RefreshCcw, Save, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  FileDown,
+  Loader2,
+  Mail,
+  RefreshCcw,
+  Save,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { generateCoverLetter, saveCoverLetter } from "@/lib/cover-letter.functions";
 import { coverLetterBody, coverLetterStatusLabel, type CoverLetterRow } from "@/lib/cover-letter";
 import { buildCoverLetterPdf } from "@/lib/cover-letter-pdf";
+import { normaliseSettings } from "@/lib/tailoring-settings";
 import { validationStatusLabel } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +40,8 @@ export const Route = createFileRoute("/_authenticated/jobs/$jobId/cover-letter")
       { property: "og:title", content: "Evidence-Backed Cover Letter — MauJobFit" },
       {
         property: "og:description",
-        content: "A cover letter with no invented claims: every sentence traces back to your own stored evidence.",
+        content:
+          "A cover letter with no invented claims: every sentence traces back to your own stored evidence.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -67,12 +78,16 @@ function CoverLetterPage() {
   const dataQuery = useQuery({
     queryKey,
     queryFn: async () => {
-      const job = await supabase.from("jobs").select("id, title, company").eq("id", jobId).maybeSingle();
+      const job = await supabase
+        .from("jobs")
+        .select("id, title, company")
+        .eq("id", jobId)
+        .maybeSingle();
       if (job.error) throw new Error(job.error.message);
 
       const resumes = await supabase
         .from("tailored_resumes")
-        .select("id, version")
+        .select("id, version, settings")
         .eq("job_id", jobId)
         .order("version", { ascending: false })
         .limit(1);
@@ -81,13 +96,21 @@ function CoverLetterPage() {
 
       const profile = await supabase
         .from("profiles")
-        .select("full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url")
+        .select(
+          "full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url",
+        )
         .eq("id", user!.id)
         .maybeSingle();
       if (profile.error) throw new Error(profile.error.message);
 
       if (!resume) {
-        return { job: job.data, resume: null, letter: null as CoverLetterRow | null, supportedCount: 0, profile: profile.data };
+        return {
+          job: job.data,
+          resume: null,
+          letter: null as CoverLetterRow | null,
+          supportedCount: 0,
+          profile: profile.data,
+        };
       }
 
       const [letters, items] = await Promise.all([
@@ -97,7 +120,10 @@ function CoverLetterPage() {
           .eq("tailored_resume_id", resume.id)
           .order("updated_at", { ascending: false })
           .limit(1),
-        supabase.from("tailored_resume_items").select("id, validation_status").eq("tailored_resume_id", resume.id),
+        supabase
+          .from("tailored_resume_items")
+          .select("id, validation_status")
+          .eq("tailored_resume_id", resume.id),
       ]);
       if (letters.error) throw new Error(letters.error.message);
       if (items.error) throw new Error(items.error.message);
@@ -106,7 +132,8 @@ function CoverLetterPage() {
         job: job.data,
         resume,
         letter: (letters.data?.[0] ?? null) as CoverLetterRow | null,
-        supportedCount: (items.data ?? []).filter((row) => row.validation_status === "supported").length,
+        supportedCount: (items.data ?? []).filter((row) => row.validation_status === "supported")
+          .length,
         profile: profile.data,
       };
     },
@@ -141,7 +168,9 @@ function CoverLetterPage() {
         return;
       }
       await queryClient.invalidateQueries({ queryKey });
-      toast.success(`Drafted ${result.paragraphCount} evidence-backed paragraph${result.paragraphCount === 1 ? "" : "s"}.`);
+      toast.success(
+        `Drafted ${result.paragraphCount} evidence-backed paragraph${result.paragraphCount === 1 ? "" : "s"}.`,
+      );
     } catch {
       toast.error("The cover-letter draft failed. Please retry.");
     } finally {
@@ -193,6 +222,7 @@ function CoverLetterPage() {
       toast.error("There is no letter content to export yet.");
       return;
     }
+    const settings = normaliseSettings(resume?.settings);
     const { blob, fileName } = buildCoverLetterPdf({
       profile: profile ?? null,
       jobTitle: job?.title ?? null,
@@ -201,6 +231,7 @@ function CoverLetterPage() {
       greeting: draft?.greeting ?? letter.greeting,
       body,
       signoff: draft?.signoff ?? letter.signoff,
+      paperSize: settings.paper_size,
     });
 
     const url = URL.createObjectURL(blob);
@@ -266,12 +297,17 @@ function CoverLetterPage() {
           <div className="space-y-1">
             <h1 className="text-3xl font-semibold">Cover letter</h1>
             <p className="text-sm text-muted-foreground">
-              {[job.title, job.company].filter(Boolean).join(" · ")} — written only from claims validated as supported and
-              the evidence behind them. No invented metrics, employers, projects or enthusiasm.
+              {[job.title, job.company].filter(Boolean).join(" · ")} — written only from claims
+              validated as supported and the evidence behind them. No invented metrics, employers,
+              projects or enthusiasm.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant={letter ? "outline" : "default"} disabled={generating || !resume || supportedCount === 0} onClick={() => void generate()}>
+            <Button
+              variant={letter ? "outline" : "default"}
+              disabled={generating || !resume || supportedCount === 0}
+              onClick={() => void generate()}
+            >
               {generating ? (
                 <>
                   <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -299,7 +335,8 @@ function CoverLetterPage() {
           <Mail className="mx-auto size-6 text-muted-foreground" aria-hidden />
           <p className="mt-3 font-medium">No tailored resume yet</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Generate and validate a tailored resume for this job first — the letter draws only on its supported claims.
+            Generate and validate a tailored resume for this job first — the letter draws only on
+            its supported claims.
           </p>
         </div>
       ) : supportedCount === 0 ? (
@@ -307,8 +344,8 @@ function CoverLetterPage() {
           <AlertTriangle className="mx-auto size-6 text-amber-600" aria-hidden />
           <p className="mt-3 font-medium">No defensible claim to write from</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Nothing in this resume is validated as supported yet, so there is nothing a cover letter could honestly assert.
-            Resolve the flagged claims first.
+            Nothing in this resume is validated as supported yet, so there is nothing a cover letter
+            could honestly assert. Resolve the flagged claims first.
           </p>
         </div>
       ) : !letter || !draft ? (
@@ -316,13 +353,20 @@ function CoverLetterPage() {
           <Mail className="mx-auto size-6 text-muted-foreground" aria-hidden />
           <p className="mt-3 font-medium">No cover letter drafted yet</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Draft one from your {supportedCount} supported claim{supportedCount === 1 ? "" : "s"}. You can edit every line
-            before exporting, and each edit is rechecked against the same stored evidence.
+            Draft one from your {supportedCount} supported claim{supportedCount === 1 ? "" : "s"}.
+            You can edit every line before exporting, and each edit is rechecked against the same
+            stored evidence.
           </p>
         </div>
       ) : (
         <>
-          <Card className={flagged.length ? "border-amber-500/50 bg-amber-500/5" : "border-[hsl(var(--evidence))]/40 bg-[hsl(var(--evidence))]/5"}>
+          <Card
+            className={
+              flagged.length
+                ? "border-amber-500/50 bg-amber-500/5"
+                : "border-[hsl(var(--evidence))]/40 bg-[hsl(var(--evidence))]/5"
+            }
+          >
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -332,12 +376,16 @@ function CoverLetterPage() {
                       : `${flagged.length} paragraph${flagged.length === 1 ? "" : "s"} need attention`}
                   </CardTitle>
                   <CardDescription>
-                    Overall: {validationStatusLabel[letter.validation_status] ?? letter.validation_status} ·{" "}
+                    Overall:{" "}
+                    {validationStatusLabel[letter.validation_status] ?? letter.validation_status} ·{" "}
                     {coverLetterStatusLabel[letter.status] ?? letter.status} · last updated{" "}
                     {new Date(letter.updated_at).toLocaleString()}
                   </CardDescription>
                 </div>
-                <Badge variant="outline" className={statusStyles[letter.validation_status] ?? statusStyles["pending"]}>
+                <Badge
+                  variant="outline"
+                  className={statusStyles[letter.validation_status] ?? statusStyles["pending"]}
+                >
                   {validationStatusLabel[letter.validation_status] ?? letter.validation_status}
                 </Badge>
               </div>
@@ -353,8 +401,9 @@ function CoverLetterPage() {
             <CardHeader>
               <CardTitle className="text-base">Review and edit</CardTitle>
               <CardDescription>
-                Edits are rechecked against the evidence already linked to each paragraph — no new evidence is attached and
-                nothing is substituted. The exported PDF carries none of this review material.
+                Edits are rechecked against the evidence already linked to each paragraph — no new
+                evidence is attached and nothing is substituted. The exported PDF carries none of
+                this review material.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -391,11 +440,19 @@ function CoverLetterPage() {
               {draft.paragraphs.map((paragraph, index) => {
                 const stored = letter.paragraphs.find((row) => row.id === paragraph.id);
                 return (
-                  <div key={paragraph.id} className="space-y-1.5 rounded-md border bg-background p-3">
+                  <div
+                    key={paragraph.id}
+                    className="space-y-1.5 rounded-md border bg-background p-3"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Label htmlFor={`paragraph-${paragraph.id}`}>Body paragraph {index + 1}</Label>
+                      <Label htmlFor={`paragraph-${paragraph.id}`}>
+                        Body paragraph {index + 1}
+                      </Label>
                       {stored ? (
-                        <Badge variant="outline" className={statusStyles[stored.status] ?? statusStyles["pending"]}>
+                        <Badge
+                          variant="outline"
+                          className={statusStyles[stored.status] ?? statusStyles["pending"]}
+                        >
                           {validationStatusLabel[stored.status] ?? stored.status}
                         </Badge>
                       ) : null}

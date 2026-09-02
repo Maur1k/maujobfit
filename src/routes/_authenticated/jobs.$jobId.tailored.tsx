@@ -35,8 +35,14 @@ import {
   type TailoredResumeRow,
   type TailoredSourceRow,
 } from "@/lib/tailoring";
-import { TailoringSettingsCard, tailoringSettingsQueryKey } from "@/components/jobs/TailoringSettingsCard";
-import { ContentPriorityPanel, contentPriorityQueryKey } from "@/components/jobs/ContentPriorityPanel";
+import {
+  TailoringSettingsCard,
+  tailoringSettingsQueryKey,
+} from "@/components/jobs/TailoringSettingsCard";
+import {
+  ContentPriorityPanel,
+  contentPriorityQueryKey,
+} from "@/components/jobs/ContentPriorityPanel";
 import { priorityBadgeClass, priorityLabel, type CompositionPriority } from "@/lib/composition";
 import { normaliseSettings, settingsSummary } from "@/lib/tailoring-settings";
 import { Button } from "@/components/ui/button";
@@ -90,12 +96,18 @@ function TailoredResumePage() {
   const dataQuery = useQuery({
     queryKey,
     queryFn: async () => {
-      const job = await supabase.from("jobs").select("id, title, company").eq("id", jobId).maybeSingle();
+      const job = await supabase
+        .from("jobs")
+        .select("id, title, company")
+        .eq("id", jobId)
+        .maybeSingle();
       if (job.error) throw new Error(job.error.message);
 
       const profile = await supabase
         .from("profiles")
-        .select("full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url")
+        .select(
+          "full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url",
+        )
         .eq("id", user!.id)
         .maybeSingle();
       if (profile.error) throw new Error(profile.error.message);
@@ -128,7 +140,9 @@ function TailoredResumePage() {
           .order("sort_order", { ascending: true }),
         supabase
           .from("tailored_resume_item_sources")
-          .select("id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt")
+          .select(
+            "id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt",
+          )
           .eq("user_id", user!.id),
         supabase
           .from("validation_results")
@@ -149,7 +163,9 @@ function TailoredResumePage() {
       const evidence = evidenceIds.length
         ? await supabase
             .from("resume_evidence")
-            .select("id, category, title, organization, role, start_date, end_date, content, skills")
+            .select(
+              "id, category, title, organization, role, start_date, end_date, content, skills",
+            )
             .in("id", evidenceIds)
         : { data: [], error: null };
       if (evidence.error) throw new Error(evidence.error.message);
@@ -263,7 +279,9 @@ function TailoredResumePage() {
   }
 
   const visibleItems = supportedOnly
-    ? items.filter((item) => (validationByItem.get(item.id)?.status ?? item.validation_status) === "supported")
+    ? items.filter(
+        (item) => (validationByItem.get(item.id)?.status ?? item.validation_status) === "supported",
+      )
     : items;
   const excludedCount = items.length - visibleItems.length;
 
@@ -284,10 +302,13 @@ function TailoredResumePage() {
     if (!resume) return;
     setExporting("professional");
     try {
+      const settings = normaliseSettings(resume.settings);
       const { blob, fileName } = buildProfessionalResumePdf({
         profile: profile ?? null,
         jobTitle: job.title ?? null,
         version: resume.version,
+        paperSize: settings.paper_size,
+        onePage: settings.resume_length === "one_page",
         evidence: evidence as unknown as Map<string, ProEvidence>,
         items: supportedItems.map((item) => ({
           id: item.id,
@@ -296,7 +317,9 @@ function TailoredResumePage() {
           statement: item.statement,
           evidenceIds: (sourcesByItem.get(item.id) ?? [])
             .slice()
-            .sort((a, b) => (a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0))
+            .sort((a, b) =>
+              a.support_type === "primary" ? -1 : b.support_type === "primary" ? 1 : 0,
+            )
             .map((source) => source.resume_evidence_id),
         })),
       });
@@ -352,11 +375,13 @@ function TailoredResumePage() {
     if (!resume) return;
     setExporting("docx");
     try {
+      const settings = normaliseSettings(resume.settings);
       const { buildProfessionalResumeDocx } = await import("@/lib/resume-docx-professional");
       const built = buildProfessionalResumeDocx({
         profile: profile ?? null,
         jobTitle: job.title ?? null,
         version: resume.version,
+        paperSize: settings.paper_size,
         evidence: evidence as unknown as Map<string, ProEvidence>,
         items: professionalItems(),
       });
@@ -433,7 +458,9 @@ function TailoredResumePage() {
         status: supportedOnly ? "downloaded_audit_supported_only" : "downloaded_audit_full_draft",
       });
       if (error) throw new Error(error.message);
-      toast.success(`Audit export created for ${visibleItems.length} claims with evidence citations.`);
+      toast.success(
+        `Audit export created for ${visibleItems.length} claims with evidence citations.`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
     } finally {
@@ -456,8 +483,8 @@ function TailoredResumePage() {
           <div className="space-y-1">
             <h1 className="text-3xl font-semibold">Tailored resume</h1>
             <p className="text-sm text-muted-foreground">
-              {[job.title, job.company].filter(Boolean).join(" · ")} — written only from evidence already in your
-              master resume.
+              {[job.title, job.company].filter(Boolean).join(" · ")} — written only from evidence
+              already in your master resume.
             </p>
           </div>
           <Button disabled={generating} onClick={() => void generate()}>
@@ -483,8 +510,9 @@ function TailoredResumePage() {
           <FileCheck2 className="mx-auto size-6 text-muted-foreground" aria-hidden />
           <p className="mt-3 font-medium">No tailored version yet</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Generation ranks every Master Resume entry for this posting — high priority content leads, supporting and
-            transferable evidence is retained, and missing requirements are never written in.
+            Generation ranks every Master Resume entry for this posting — high priority content
+            leads, supporting and transferable evidence is retained, and missing requirements are
+            never written in.
           </p>
         </div>
       ) : (
@@ -495,8 +523,8 @@ function TailoredResumePage() {
                 <ShieldAlert className="size-5 text-amber-600" aria-hidden />
                 <span className="font-medium">Pending evidence validation.</span>
                 <span className="flex-1 text-muted-foreground">
-                  Every line below cites the master resume evidence it came from, but no independent claim check has
-                  run yet. Validate before sending this anywhere.
+                  Every line below cites the master resume evidence it came from, but no independent
+                  claim check has run yet. Validate before sending this anywhere.
                 </span>
                 <Button size="sm" disabled={validating} onClick={() => void validate()}>
                   {validating ? (
@@ -534,11 +562,17 @@ function TailoredResumePage() {
                           : "Every claim is substantiated by cited evidence"}
                     </CardTitle>
                     <CardDescription>
-                      Claim validation checks each line against its stored citations — wording, scope, metrics,
-                      technology, employer and timeframe. Your master resume is never changed.
+                      Claim validation checks each line against its stored citations — wording,
+                      scope, metrics, technology, employer and timeframe. Your master resume is
+                      never changed.
                     </CardDescription>
                   </div>
-                  <Button size="sm" variant="outline" disabled={validating} onClick={() => void validate()}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={validating}
+                    onClick={() => void validate()}
+                  >
                     {validating ? (
                       <>
                         <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -562,10 +596,15 @@ function TailoredResumePage() {
                     ["unsupported", summary.unsupported],
                   ] as const
                 ).map(([status, count]) => (
-                  <div key={status} className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <div
+                    key={status}
+                    className="flex items-center gap-2 rounded-md border bg-background px-3 py-2"
+                  >
                     <StatusIcon status={status} />
                     <span className="font-mono text-sm">{count}</span>
-                    <span className="text-xs text-muted-foreground">{validationStatusLabel[status]}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {validationStatusLabel[status]}
+                    </span>
                   </div>
                 ))}
                 <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
@@ -590,7 +629,11 @@ function TailoredResumePage() {
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch id="supported-only" checked={supportedOnly} onCheckedChange={setSupportedOnly} />
+                  <Switch
+                    id="supported-only"
+                    checked={supportedOnly}
+                    onCheckedChange={setSupportedOnly}
+                  />
                   <Label htmlFor="supported-only" className="text-sm">
                     Supported only
                   </Label>
@@ -604,10 +647,11 @@ function TailoredResumePage() {
                     Professional resume — application ready
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Recruiter-facing PDF for JobStreet, LinkedIn and direct applications. Clean single-column
-                    ATS-friendly layout with selectable text. Uses only the {supportedItems.length} claim
-                    {supportedItems.length === 1 ? "" : "s"} validated as <strong>supported</strong> — no evidence IDs,
-                    citations, statuses or internal notes appear anywhere in it.
+                    Recruiter-facing PDF for JobStreet, LinkedIn and direct applications. Clean
+                    single-column ATS-friendly layout with selectable text. Uses only the{" "}
+                    {supportedItems.length} claim
+                    {supportedItems.length === 1 ? "" : "s"} validated as <strong>supported</strong>{" "}
+                    — no evidence IDs, citations, statuses or internal notes appear anywhere in it.
                   </p>
                   <Button
                     className="mt-3"
@@ -645,13 +689,14 @@ function TailoredResumePage() {
                     )}
                   </Button>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    The Word version mirrors the same layout and content, and stays fully editable in Microsoft Word and
-                    Google Docs.
+                    The Word version mirrors the same layout and content, and stays fully editable
+                    in Microsoft Word and Google Docs.
                   </p>
                   {supportedItems.length === 0 ? (
                     <p className="mt-2 text-xs text-amber-600">
-                      No claim is validated as supported yet, so there is nothing application-ready to export. Validate
-                      the resume, then edit or rewrite the flagged claims until they are substantiated.
+                      No claim is validated as supported yet, so there is nothing application-ready
+                      to export. Validate the resume, then edit or rewrite the flagged claims until
+                      they are substantiated.
                     </p>
                   ) : null}
                 </div>
@@ -662,9 +707,11 @@ function TailoredResumePage() {
                     Audit / evidence export — internal review only
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    The citation-rich traceability document: validation status per claim, citation markers and the full
-                    evidence appendix with provenance. Follows the toggle above ({supportedOnly ? "supported only" : "full working draft"},{" "}
-                    {visibleItems.length} claim{visibleItems.length === 1 ? "" : "s"}). Not for sending to employers.
+                    The citation-rich traceability document: validation status per claim, citation
+                    markers and the full evidence appendix with provenance. Follows the toggle above
+                    ({supportedOnly ? "supported only" : "full working draft"},{" "}
+                    {visibleItems.length} claim{visibleItems.length === 1 ? "" : "s"}). Not for
+                    sending to employers.
                   </p>
                   <Button
                     variant="outline"
@@ -720,7 +767,8 @@ function TailoredResumePage() {
                 <br />
                 Version {resume.version} · {items.length} generated items ·{" "}
                 {Math.round((resume.match_score ?? 0) * 100)}% weighted requirement coverage ·{" "}
-                {Math.round((resume.evidence_coverage ?? 0) * 100)}% exact coverage · master resume untouched.
+                {Math.round((resume.evidence_coverage ?? 0) * 100)}% exact coverage · master resume
+                untouched.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -743,31 +791,35 @@ function TailoredResumePage() {
                     <div key={`${item.id}-wrap`} className="space-y-1">
                       {item.priority ? (
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge className={priorityBadgeClass[item.priority as CompositionPriority]}>
+                          <Badge
+                            className={priorityBadgeClass[item.priority as CompositionPriority]}
+                          >
                             {priorityLabel[item.priority as CompositionPriority]}
                           </Badge>
                           {item.priority_rationale ? (
-                            <span className="text-xs text-muted-foreground">{item.priority_rationale}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {item.priority_rationale}
+                            </span>
                           ) : null}
                         </div>
                       ) : null}
-                    <TailoredItemCard
-                      key={item.id}
-                      item={item}
-                      sources={sourcesByItem.get(item.id) ?? []}
-                      evidence={evidence}
-                      validation={validationByItem.get(item.id)}
-                      onChanged={async (reason) => {
-                        await snapshotTailoredResume({
-                          data: {
-                            tailoredResumeId: resume!.id,
-                            reason,
-                            label: `v${resume!.version} · ${reason === "rewrite_accepted" ? "rewrite accepted" : "item edited"}`,
-                          },
-                        }).catch(() => null);
-                        await queryClient.invalidateQueries({ queryKey });
-                      }}
-                    />
+                      <TailoredItemCard
+                        key={item.id}
+                        item={item}
+                        sources={sourcesByItem.get(item.id) ?? []}
+                        evidence={evidence}
+                        validation={validationByItem.get(item.id)}
+                        onChanged={async (reason) => {
+                          await snapshotTailoredResume({
+                            data: {
+                              tailoredResumeId: resume!.id,
+                              reason,
+                              label: `v${resume!.version} · ${reason === "rewrite_accepted" ? "rewrite accepted" : "item edited"}`,
+                            },
+                          }).catch(() => null);
+                          await queryClient.invalidateQueries({ queryKey });
+                        }}
+                      />
                     </div>
                   ))}
                 </CardContent>

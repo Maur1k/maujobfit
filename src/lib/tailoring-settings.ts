@@ -9,17 +9,20 @@ export const RESUME_LENGTHS = ["one_page", "two_page"] as const;
 export const TAILORING_LEVELS = ["conservative", "balanced", "aggressive"] as const;
 export const PROJECT_INCLUSIONS = ["most_relevant", "relevant_supporting", "all"] as const;
 export const SKILLS_SCOPES = ["job_only", "relevant_supporting", "full_master"] as const;
+export const PAPER_SIZES = ["letter", "a4"] as const;
 
 export type ResumeLength = (typeof RESUME_LENGTHS)[number];
 export type TailoringLevel = (typeof TAILORING_LEVELS)[number];
 export type ProjectInclusion = (typeof PROJECT_INCLUSIONS)[number];
 export type SkillsScope = (typeof SKILLS_SCOPES)[number];
+export type PaperSize = (typeof PAPER_SIZES)[number];
 
 export type TailoringSettings = {
   resume_length: ResumeLength;
   tailoring_level: TailoringLevel;
   project_inclusion: ProjectInclusion;
   skills_scope: SkillsScope;
+  paper_size: PaperSize;
   include_summary: boolean;
   include_experience: boolean;
   include_projects: boolean;
@@ -33,6 +36,7 @@ export const DEFAULT_TAILORING_SETTINGS: TailoringSettings = {
   tailoring_level: "balanced",
   project_inclusion: "relevant_supporting",
   skills_scope: "relevant_supporting",
+  paper_size: "letter",
   include_summary: true,
   include_experience: true,
   include_projects: true,
@@ -64,6 +68,11 @@ export const skillsScopeLabel: Record<SkillsScope, string> = {
   full_master: "Full master skills",
 };
 
+export const paperSizeLabel: Record<PaperSize, string> = {
+  letter: "US Letter (8.5 × 11 in)",
+  a4: "A4 (210 × 297 mm)",
+};
+
 type Option<T extends string> = { value: T; label: string; description: string };
 
 export const RESUME_LENGTH_OPTIONS: Option<ResumeLength>[] = [
@@ -79,6 +88,19 @@ export const RESUME_LENGTH_OPTIONS: Option<ResumeLength>[] = [
   },
 ];
 
+export const PAPER_SIZE_OPTIONS: Option<PaperSize>[] = [
+  {
+    value: "letter",
+    label: paperSizeLabel.letter,
+    description: "Standard for US and Canada ATS systems and recruiter printing.",
+  },
+  {
+    value: "a4",
+    label: paperSizeLabel.a4,
+    description: "Standard for UK, Europe, Australia, and international recruiters.",
+  },
+];
+
 export const TAILORING_LEVEL_OPTIONS: Option<TailoringLevel>[] = [
   {
     value: "conservative",
@@ -88,12 +110,14 @@ export const TAILORING_LEVEL_OPTIONS: Option<TailoringLevel>[] = [
   {
     value: "balanced",
     label: tailoringLevelLabel.balanced,
-    description: "Recommended. Emphasises what the job asks for while keeping transferable evidence.",
+    description:
+      "Recommended. Emphasises what the job asks for while keeping transferable evidence.",
   },
   {
     value: "aggressive",
     label: tailoringLevelLabel.aggressive,
-    description: "Narrows to the closest-fitting evidence. Nothing is deleted from your Master Resume.",
+    description:
+      "Narrows to the closest-fitting evidence. Nothing is deleted from your Master Resume.",
   },
 ];
 
@@ -108,7 +132,11 @@ export const PROJECT_INCLUSION_OPTIONS: Option<ProjectInclusion>[] = [
     label: projectInclusionLabel.relevant_supporting,
     description: "Recommended. Relevant projects plus ones showing transferable technologies.",
   },
-  { value: "all", label: projectInclusionLabel.all, description: "Every project in your Master Resume." },
+  {
+    value: "all",
+    label: projectInclusionLabel.all,
+    description: "Every project in your Master Resume.",
+  },
 ];
 
 export const SKILLS_SCOPE_OPTIONS: Option<SkillsScope>[] = [
@@ -162,7 +190,8 @@ export function compositionBudget(settings: TailoringSettings): CompositionBudge
       };
 
   if (settings.project_inclusion === "all") base.projectGroups = Math.max(base.projectGroups, 12);
-  if (settings.project_inclusion === "most_relevant") base.projectGroups = Math.min(base.projectGroups, 3);
+  if (settings.project_inclusion === "most_relevant")
+    base.projectGroups = Math.min(base.projectGroups, 3);
 
   if (settings.skills_scope === "full_master") base.maxSkills = 80;
   if (settings.skills_scope === "job_only") base.maxSkills = Math.min(base.maxSkills, 14);
@@ -184,12 +213,15 @@ const RESUME_LENGTH_SET = new Set<string>(RESUME_LENGTHS);
 const LEVEL_SET = new Set<string>(TAILORING_LEVELS);
 const PROJECT_SET = new Set<string>(PROJECT_INCLUSIONS);
 const SKILLS_SET = new Set<string>(SKILLS_SCOPES);
+const PAPER_SIZE_SET = new Set<string>(PAPER_SIZES);
 
 /** Coerces a persisted row (or an unknown jsonb snapshot) into valid settings. */
 export function normaliseSettings(input: unknown): TailoringSettings {
   const row = (input ?? {}) as Partial<Record<keyof TailoringSettings, unknown>>;
   const bool = (key: keyof TailoringSettings) =>
-    typeof row[key] === "boolean" ? (row[key] as boolean) : DEFAULT_TAILORING_SETTINGS[key] === true;
+    typeof row[key] === "boolean"
+      ? (row[key] as boolean)
+      : DEFAULT_TAILORING_SETTINGS[key] === true;
 
   return {
     resume_length: RESUME_LENGTH_SET.has(String(row.resume_length))
@@ -204,6 +236,9 @@ export function normaliseSettings(input: unknown): TailoringSettings {
     skills_scope: SKILLS_SET.has(String(row.skills_scope))
       ? (row.skills_scope as SkillsScope)
       : DEFAULT_TAILORING_SETTINGS.skills_scope,
+    paper_size: PAPER_SIZE_SET.has(String(row.paper_size))
+      ? (row.paper_size as PaperSize)
+      : DEFAULT_TAILORING_SETTINGS.paper_size,
     include_summary: bool("include_summary"),
     include_experience: bool("include_experience"),
     include_projects: bool("include_projects"),
@@ -216,6 +251,7 @@ export function normaliseSettings(input: unknown): TailoringSettings {
 export function settingsSummary(settings: TailoringSettings) {
   return [
     resumeLengthLabel[settings.resume_length],
+    settings.paper_size === "a4" ? "A4" : "Letter",
     tailoringLevelLabel[settings.tailoring_level],
     `Projects: ${projectInclusionLabel[settings.project_inclusion]}`,
     `Skills: ${skillsScopeLabel[settings.skills_scope]}`,
