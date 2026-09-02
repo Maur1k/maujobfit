@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -18,6 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { generateTailoredResume } from "@/lib/tailoring.functions";
 import { validateTailoredResume } from "@/lib/validation.functions";
+import { classifyMasterSkills } from "@/lib/skill-relevance.functions";
+import { SkillRelevancePanel, skillRelevanceQueryKey } from "@/components/jobs/SkillRelevancePanel";
 import {
   validationIssueLabel,
   validationStatusLabel,
@@ -72,6 +74,7 @@ function TailoredResumePage() {
   const { jobId } = Route.useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [generating, setGenerating] = useState(false);
   const [validating, setValidating] = useState(false);
   const [supportedOnly, setSupportedOnly] = useState(false);
@@ -180,8 +183,15 @@ function TailoredResumePage() {
           },
         }).catch(() => null);
       }
-      await queryClient.invalidateQueries({ queryKey });
+      // Keep the job-scoped relevance view in step with the new draft (master resume untouched).
+      await classifyMasterSkills({ data: { jobId } }).catch(() => null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        queryClient.invalidateQueries({ queryKey: skillRelevanceQueryKey(jobId, user?.id) }),
+        queryClient.invalidateQueries({ queryKey: ["tailored-preview", jobId, user?.id] }),
+      ]);
       toast.success(`Generated v${result.version} — ${result.itemCount} items with ${result.sourceCount} citations.`);
+      await navigate({ to: "/jobs/$jobId/preview", params: { jobId } });
     } catch {
       toast.error("The generation run failed. Please retry.");
     } finally {
@@ -685,6 +695,11 @@ function TailoredResumePage() {
                     Version history
                   </Link>
                 </Button>
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/jobs/$jobId/preview" params={{ jobId }}>
+                    Draft preview
+                  </Link>
+                </Button>
               </div>
             </CardHeader>
           </Card>
@@ -709,8 +724,8 @@ function TailoredResumePage() {
                   <CardTitle className="text-base">{tailoredSectionLabel[section]}</CardTitle>
                   <CardDescription>
                     {section === "skill"
-                      ? "Only skills that appear in your evidence."
-                      : "Each item is traceable to the evidence it was written from."}
+                      ? "Only skills that appear in your evidence, selected for this job. Skills left out here are still stored in full in your Master Resume — nothing is deleted or reordered there."
+                      : "Each item is traceable to the evidence it was written from. Tailoring selects and reorders source evidence only; the source records stay unchanged."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -737,6 +752,8 @@ function TailoredResumePage() {
               </Card>
             );
           })}
+
+          <SkillRelevancePanel jobId={jobId} />
         </>
       )}
     </div>
