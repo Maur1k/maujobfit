@@ -336,10 +336,17 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
       const itemRow = rows.find((row) => row.evidence_kind === "item") ?? rows[0];
       if (!itemRow) continue;
       const dates = [itemRow.start_date, itemRow.end_date].filter(Boolean).join(" – ");
+      const headingLower = candidate.label.toLowerCase();
+      // The heading already carries the qualification and institution — keep only new detail.
+      const detail = itemRow.content
+        .split(/\s+[—|·]\s+/)
+        .map((part) => part.trim())
+        .filter((part) => part && !headingLower.includes(part.toLowerCase()))
+        .join(" · ");
       drafts.push({
         section: candidate.section,
         heading: candidate.label,
-        statement: [itemRow.content.trim(), dates].filter(Boolean).join(" · "),
+        statement: [detail, dates].filter(Boolean).join(" · ") || itemRow.content.trim(),
         rationale: "Copied from your master resume record without rewriting.",
         confidence: 0.9,
         evidenceIds: [itemRow.id],

@@ -242,7 +242,7 @@ export async function loadJobComposition(
       if (!skill.trim()) continue;
       skillEntryFor(skill).itemIds.add(item.id);
     }
-    if (item.section === "skill" && item.title?.trim()) skillEntryFor(item.title).itemIds.add(item.id);
+    // A skill-section item's title is a category header ("Languages", "Tools"), not a skill.
   }
   for (const row of evidence) {
     for (const skill of row.skills ?? []) {

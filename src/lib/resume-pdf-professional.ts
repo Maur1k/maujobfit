@@ -384,6 +384,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     y += 4;
   };
 
+  y += 4;
   renderSimple("education", "Education");
   renderSimple("certification", "Certifications");
 
