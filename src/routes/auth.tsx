@@ -15,13 +15,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Evidence Tailor" },
+      { title: "Sign in — MauJobFit" },
       {
         name: "description",
         content:
           "Sign in or create an account to build an evidence-backed master resume and tailor it to any job.",
       },
-      { property: "og:title", content: "Sign in — Evidence Tailor" },
+      { property: "og:title", content: "Sign in — MauJobFit" },
       {
         property: "og:description",
         content: "Access your evidence-backed resume workspace.",
