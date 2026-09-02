@@ -234,6 +234,62 @@ function TailoredResumePage() {
     sourcesByItem.set(row.tailored_resume_item_id, list);
   }
 
+  const visibleItems = supportedOnly
+    ? items.filter((item) => (validationByItem.get(item.id)?.status ?? item.validation_status) === "supported")
+    : items;
+  const excludedCount = items.length - visibleItems.length;
+
+  const exportPdf = async () => {
+    if (!resume) return;
+    setExporting(true);
+    try {
+      const { blob, fileName } = buildTailoredResumePdf({
+        profile: profile ?? null,
+        jobTitle: job.title ?? null,
+        jobCompany: job.company ?? null,
+        resumeTitle: resume.title,
+        version: resume.version,
+        supportedOnly,
+        excludedCount,
+        evidence,
+        items: visibleItems.map((item) => ({
+          id: item.id,
+          section: item.section,
+          heading: item.heading,
+          statement: item.statement,
+          validationStatus: validationByItem.get(item.id)?.status ?? item.validation_status,
+          validationRationale: validationByItem.get(item.id)?.rationale ?? null,
+          sources: (sourcesByItem.get(item.id) ?? []).map((source) => ({
+            resume_evidence_id: source.resume_evidence_id,
+            support_type: source.support_type,
+            excerpt: source.excerpt,
+          })),
+        })),
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      const { error } = await supabase.from("exports").insert({
+        user_id: user!.id,
+        tailored_resume_id: resume.id,
+        format: "pdf",
+        file_name: fileName,
+        status: supportedOnly ? "downloaded_supported_only" : "downloaded_full_draft",
+      });
+      if (error) throw new Error(error.message);
+      toast.success(`Exported ${visibleItems.length} claims with evidence citations.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The export failed. Please retry.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-3">
@@ -367,6 +423,54 @@ function TailoredResumePage() {
             </Card>
           )}
 
+          <Card className={supportedOnly ? "border-[hsl(var(--evidence))]/60" : undefined}>
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-base">
+                    {supportedOnly ? "Final resume — supported claims only" : "Full working draft"}
+                  </CardTitle>
+                  <CardDescription>
+                    {supportedOnly
+                      ? `Showing only the ${visibleItems.length} claim${visibleItems.length === 1 ? "" : "s"} validated as supported. ${excludedCount} flagged item${excludedCount === 1 ? "" : "s"} are hidden from the final output but kept in the draft — nothing is deleted.`
+                      : `Showing all ${items.length} generated claims, including any that are partially supported, unsupported or awaiting review.`}
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch id="supported-only" checked={supportedOnly} onCheckedChange={setSupportedOnly} />
+                    <Label htmlFor="supported-only" className="text-sm">
+                      Supported only
+                    </Label>
+                  </div>
+                  <Button
+                    variant={supportedOnly ? "default" : "outline"}
+                    disabled={exporting || visibleItems.length === 0}
+                    onClick={() => void exportPdf()}
+                  >
+                    {exporting ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Exporting…
+                      </>
+                    ) : (
+                      <>
+                        <Download className="size-4" aria-hidden />
+                        Export PDF
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              {supportedOnly && visibleItems.length === 0 ? (
+                <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/5 p-3 text-sm">
+                  No claim is validated as supported yet, so there is nothing to export in this mode. Validate the
+                  resume, then edit or rewrite the flagged claims until they are substantiated.
+                </p>
+              ) : null}
+            </CardHeader>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">{resume.title}</CardTitle>
@@ -379,7 +483,7 @@ function TailoredResumePage() {
           </Card>
 
           {TAILORED_SECTIONS.map((section) => {
-            const sectionItems = items.filter((item) => item.section === section);
+            const sectionItems = visibleItems.filter((item) => item.section === section);
             if (sectionItems.length === 0) return null;
             return (
               <Card key={section}>
@@ -392,127 +496,16 @@ function TailoredResumePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {sectionItems.map((item) => {
-                    const itemSources = sourcesByItem.get(item.id) ?? [];
-                    const validation = validationByItem.get(item.id);
-                    if (itemSources.length === 0 && !validation) return null;
-                    return (
-                      <div key={item.id} className="rounded-lg border p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            {item.heading ? (
-                              <p className="font-display text-sm font-semibold">{item.heading}</p>
-                            ) : null}
-                            <p className="text-sm leading-relaxed">{item.statement}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={`text-xs ${statusBadgeClass(validation?.status)}`}>
-                              {validationStatusLabel[validation?.status ?? item.validation_status] ??
-                                item.validation_status}
-                            </Badge>
-                            {item.confidence !== null ? (
-                              <span className="font-mono text-xs text-muted-foreground">
-                                {Math.round(item.confidence * 100)}%
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                        {item.rationale ? (
-                          <p className="mt-2 text-xs text-muted-foreground">{item.rationale}</p>
-                        ) : null}
-
-                        {validation ? (
-                          <div
-                            className={`mt-3 rounded-md border p-3 text-xs leading-relaxed ${
-                              validation.status === "unsupported"
-                                ? "border-destructive/50 bg-destructive/5"
-                                : validation.status === "supported"
-                                  ? "border-[hsl(var(--evidence))]/40 bg-[hsl(var(--evidence))]/5"
-                                  : "border-amber-500/50 bg-amber-500/5"
-                            }`}
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              <StatusIcon status={validation.status} />
-                              <span className="font-medium">{validationStatusLabel[validation.status]}</span>
-                              {validation.confidence !== null ? (
-                                <span className="font-mono text-muted-foreground">
-                                  {Math.round(validation.confidence * 100)}% confidence
-                                </span>
-                              ) : null}
-                              <span className="font-mono uppercase tracking-wide text-muted-foreground">
-                                {validation.validator === "deterministic" ? "rule check" : "rule + AI check"}
-                              </span>
-                            </div>
-                            {validation.rationale ? <p className="mt-2">{validation.rationale}</p> : null}
-                            {validation.unsupported_spans.length > 0 ? (
-                              <p className="mt-2">
-                                <span className="font-medium">Not substantiated: </span>
-                                {validation.unsupported_spans.map((span) => (
-                                  <span
-                                    key={span}
-                                    className="mr-1 rounded bg-destructive/15 px-1 py-0.5 font-mono text-destructive"
-                                  >
-                                    {span}
-                                  </span>
-                                ))}
-                              </p>
-                            ) : null}
-                            {validation.issues.length > 0 ? (
-                              <ul className="mt-2 space-y-1">
-                                {validation.issues.map((issue) => (
-                                  <li key={issue} className="flex items-start gap-2">
-                                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                                    <span>{validationIssueLabel[issue] ?? issue}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : null}
-                          </div>
-                        ) : null}
-
-                        <Collapsible>
-                          <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="mt-2 h-8 px-2 text-xs">
-                              <Quote className="size-3.5" aria-hidden />
-                              {itemSources.length} evidence citation{itemSources.length === 1 ? "" : "s"}
-                            </Button>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="mt-2 space-y-2">
-                            {itemSources.map((source) => {
-                              const record = evidence.get(source.resume_evidence_id);
-                              return (
-                                <div
-                                  key={source.id}
-                                  className="rounded-md border bg-secondary/40 p-3 text-xs leading-relaxed"
-                                >
-                                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                                    <span className="font-mono uppercase tracking-wide text-muted-foreground">
-                                      {[record?.category, record?.role, record?.organization, record?.title]
-                                        .filter(Boolean)
-                                        .join(" · ") || "Evidence record"}
-                                    </span>
-                                    <Badge
-                                      className={
-                                        source.support_type === "primary"
-                                          ? "bg-[hsl(var(--evidence))] text-[hsl(var(--evidence-foreground))]"
-                                          : "bg-amber-500 text-white"
-                                      }
-                                    >
-                                      {source.support_type === "primary" ? "Exact support" : "Related support"}
-                                    </Badge>
-                                  </div>
-                                  <p>{source.excerpt ?? record?.content}</p>
-                                </div>
-                              );
-                            })}
-                            {itemSources.length === 0 ? (
-                              <p className="text-xs text-destructive">No citation recorded for this item.</p>
-                            ) : null}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </div>
-                    );
-                  })}
+                  {sectionItems.map((item) => (
+                    <TailoredItemCard
+                      key={item.id}
+                      item={item}
+                      sources={sourcesByItem.get(item.id) ?? []}
+                      evidence={evidence}
+                      validation={validationByItem.get(item.id)}
+                      onChanged={() => queryClient.invalidateQueries({ queryKey })}
+                    />
+                  ))}
                 </CardContent>
               </Card>
             );
