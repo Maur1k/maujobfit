@@ -366,6 +366,27 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     }
   }
 
+  // ---------- Education & Certifications ----------
+  const renderSimple = (section: string, label: string) => {
+    const sectionItems = bySection(section);
+    if (sectionItems.length === 0) return;
+    sectionHeading(label, 26);
+    for (const item of sectionItems) {
+      const heading = (item.heading || "").trim();
+      if (heading) {
+        ensure(14);
+        setFont(10.5, "bold");
+        doc.text(heading, MARGIN_X, y + 10.5);
+        y += 14;
+      }
+      block(item.statement.trim(), { size: 9.5, color: MUTED, leading: 12.5, gap: 4 });
+    }
+    y += 4;
+  };
+
+  renderSimple("education", "Education");
+  renderSimple("certification", "Certifications");
+
   const slug = [input.profile?.full_name, input.jobTitle]
     .filter(Boolean)
     .join("-")

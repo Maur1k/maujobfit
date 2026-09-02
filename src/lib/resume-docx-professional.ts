@@ -194,6 +194,28 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
     }
   }
 
+  const renderSimple = (section: string, label: string) => {
+    const sectionItems = bySection(section);
+    if (sectionItems.length === 0) return;
+    sectionHeading(label);
+    for (const item of sectionItems) {
+      const heading = (item.heading || "").trim();
+      if (heading) {
+        children.push(
+          new Paragraph({
+            keepNext: true,
+            spacing: { before: 100, after: 20 },
+            children: [new TextRun({ text: heading, bold: true, size: 21, color: INK })],
+          }),
+        );
+      }
+      children.push(bodyParagraph(item.statement.trim()));
+    }
+  };
+
+  renderSimple("education", "Education");
+  renderSimple("certification", "Certifications");
+
   const doc = new Document({
     styles: {
       default: { document: { run: { font: "Arial", size: 20, color: INK } } },
