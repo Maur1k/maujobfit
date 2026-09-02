@@ -88,7 +88,7 @@ function AuthPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between border-r border-border bg-primary p-10 text-primary-foreground lg:flex">
         <Link to="/" className="font-display text-lg font-semibold">
-          Evidence<span className="text-evidence">·</span>Tailor
+          Mau<span className="text-evidence">·</span>JobFit
         </Link>
         <div className="space-y-6">
           <h1 className="max-w-md font-display text-4xl font-semibold leading-tight">

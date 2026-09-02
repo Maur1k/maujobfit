@@ -50,7 +50,7 @@ function Landing() {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <span className="font-display text-lg font-semibold">
-            Evidence<span className="text-evidence">·</span>Tailor
+            Mau<span className="text-evidence">·</span>JobFit
           </span>
           <Button asChild size="sm">
             <Link to="/auth">Sign in</Link>
@@ -127,7 +127,7 @@ function Landing() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-8 text-xs text-muted-foreground sm:px-6">
-          MauJobFit — Phase 1 foundations. AI matching and PDF import arrive next.
+          MauJobFit — evidence-backed resume tailoring. PDF import is live; job matching arrives next.
         </div>
       </footer>
     </div>

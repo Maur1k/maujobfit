@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
           <Link to="/dashboard" className="font-display text-lg font-semibold tracking-tight">
-            Evidence<span className="text-evidence">·</span>Tailor
+            Mau<span className="text-evidence">·</span>JobFit
           </Link>
           <nav className="order-3 flex w-full items-center gap-1 sm:order-2 sm:w-auto">
             {nav.map(({ to, label, icon: Icon }) => (
