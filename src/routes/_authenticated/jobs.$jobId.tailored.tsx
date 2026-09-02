@@ -74,7 +74,7 @@ function TailoredResumePage() {
   const [generating, setGenerating] = useState(false);
   const [validating, setValidating] = useState(false);
   const [supportedOnly, setSupportedOnly] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"professional" | "audit" | null>(null);
   const queryKey = ["tailored-resume", jobId, user?.id];
 
   const dataQuery = useQuery({
