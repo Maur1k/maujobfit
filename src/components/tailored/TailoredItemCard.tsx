@@ -59,7 +59,7 @@ type Props = {
   item: TailoredItemRow;
   sources: TailoredSourceRow[];
   evidence: Map<string, EvidenceLite>;
-  validation?: ValidationRow;
+  validation?: ValidationRow | undefined;
   onChanged: () => Promise<void> | void;
 };
 
