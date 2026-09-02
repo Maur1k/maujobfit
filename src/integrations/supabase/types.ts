@@ -208,34 +208,43 @@ export type Database = {
         Row: {
           coverage: string | null
           created_at: string
+          evidence_excerpt: string | null
           id: string
           job_id: string
           job_requirement_id: string | null
+          master_resume_id: string | null
           rationale: string | null
           resume_evidence_id: string | null
           score: number | null
+          status: string | null
           user_id: string
         }
         Insert: {
           coverage?: string | null
           created_at?: string
+          evidence_excerpt?: string | null
           id?: string
           job_id: string
           job_requirement_id?: string | null
+          master_resume_id?: string | null
           rationale?: string | null
           resume_evidence_id?: string | null
           score?: number | null
+          status?: string | null
           user_id: string
         }
         Update: {
           coverage?: string | null
           created_at?: string
+          evidence_excerpt?: string | null
           id?: string
           job_id?: string
           job_requirement_id?: string | null
+          master_resume_id?: string | null
           rationale?: string | null
           resume_evidence_id?: string | null
           score?: number | null
+          status?: string | null
           user_id?: string
         }
         Relationships: [
@@ -251,6 +260,13 @@ export type Database = {
             columns: ["job_requirement_id"]
             isOneToOne: false
             referencedRelation: "job_requirements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_master_resume_id_fkey"
+            columns: ["master_resume_id"]
+            isOneToOne: false
+            referencedRelation: "master_resumes"
             referencedColumns: ["id"]
           },
           {
