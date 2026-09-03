@@ -188,7 +188,57 @@ function JobDetail() {
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-semibold">{job.title}</h1>
+            {editingTitle ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  value={titleDraft}
+                  onChange={(event) => setTitleDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void saveTitle();
+                    if (event.key === "Escape") setEditingTitle(false);
+                  }}
+                  maxLength={200}
+                  autoFocus
+                  aria-label="Job title"
+                  className="w-80 max-w-full text-lg font-semibold"
+                  disabled={savingTitle}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => void saveTitle()}
+                  disabled={savingTitle || !titleDraft.trim()}
+                >
+                  {savingTitle ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <Check className="size-4" aria-hidden />
+                  )}
+                  Save
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingTitle(false)}
+                  disabled={savingTitle}
+                >
+                  <X className="size-4" aria-hidden />
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-semibold">{job.title}</h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={startEditTitle}
+                  aria-label="Edit job title"
+                  title="Edit job title"
+                >
+                  <Pencil className="size-4" aria-hidden />
+                </Button>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               {[job.company, job.location, job.seniority, job.employment_type]
                 .filter(Boolean)
