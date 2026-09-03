@@ -47,7 +47,10 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
   const children: Paragraph[] = [];
 
   const name = (input.profile?.full_name || "").trim() || "Curriculum Vitae";
-  const target = (input.jobTitle || input.profile?.headline || "").trim();
+  const rawTarget = (input.jobTitle ?? "").trim();
+  const target = (
+    rawTarget.toLowerCase() === "untitled job" ? input.profile?.headline ?? "" : rawTarget || input.profile?.headline || ""
+  ).trim();
 
   children.push(
     new Paragraph({
