@@ -276,7 +276,10 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     doc.setCharSpace(0);
     y += s(27);
 
-    const target = (input.jobTitle || input.profile?.headline || "").trim();
+    const rawTarget = (input.jobTitle ?? "").trim();
+    const target = (
+      rawTarget.toLowerCase() === "untitled job" ? input.profile?.headline ?? "" : rawTarget || input.profile?.headline || ""
+    ).trim();
     if (target) {
       setFont(10.5, "bold", MUTED);
       doc.setCharSpace(1.4);
