@@ -143,6 +143,39 @@ function JobDetail() {
 
   const requirements = jobQuery.data?.requirements ?? [];
 
+  const startEditTitle = () => {
+    setTitleDraft(job.title ?? "");
+    setEditingTitle(true);
+  };
+
+  const saveTitle = async () => {
+    const next = titleDraft.trim();
+    if (!next) {
+      toast.error("The job title cannot be empty.");
+      return;
+    }
+    if (next === (job.title ?? "")) {
+      setEditingTitle(false);
+      return;
+    }
+    setSavingTitle(true);
+    try {
+      const { error } = await supabase
+        .from("jobs")
+        .update({ title: next })
+        .eq("id", job.id);
+      if (error) throw new Error(error.message);
+      await queryClient.invalidateQueries({ queryKey: ["job", job.id, user?.id] });
+      await queryClient.invalidateQueries({ queryKey: ["jobs", user?.id] });
+      toast.success("Job title updated.");
+      setEditingTitle(false);
+    } catch {
+      toast.error("Couldn't save the new title. Please retry.");
+    } finally {
+      setSavingTitle(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-3">
