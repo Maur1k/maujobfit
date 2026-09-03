@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, RefreshCcw, ScanSearch } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Pencil, RefreshCcw, ScanSearch, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/job-analysis";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -50,6 +51,9 @@ function JobDetail() {
   const queryClient = useQueryClient();
   const [retrying, setRetrying] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
 
   const jobQuery = useQuery({
     queryKey: ["job", jobId, user?.id],
@@ -139,6 +143,39 @@ function JobDetail() {
 
   const requirements = jobQuery.data?.requirements ?? [];
 
+  const startEditTitle = () => {
+    setTitleDraft(job.title ?? "");
+    setEditingTitle(true);
+  };
+
+  const saveTitle = async () => {
+    const next = titleDraft.trim();
+    if (!next) {
+      toast.error("The job title cannot be empty.");
+      return;
+    }
+    if (next === (job.title ?? "")) {
+      setEditingTitle(false);
+      return;
+    }
+    setSavingTitle(true);
+    try {
+      const { error } = await supabase
+        .from("jobs")
+        .update({ title: next })
+        .eq("id", job.id);
+      if (error) throw new Error(error.message);
+      await queryClient.invalidateQueries({ queryKey: ["job", job.id, user?.id] });
+      await queryClient.invalidateQueries({ queryKey: ["jobs", user?.id] });
+      toast.success("Job title updated.");
+      setEditingTitle(false);
+    } catch {
+      toast.error("Couldn't save the new title. Please retry.");
+    } finally {
+      setSavingTitle(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-3">
@@ -151,7 +188,57 @@ function JobDetail() {
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-semibold">{job.title}</h1>
+            {editingTitle ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  value={titleDraft}
+                  onChange={(event) => setTitleDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void saveTitle();
+                    if (event.key === "Escape") setEditingTitle(false);
+                  }}
+                  maxLength={200}
+                  autoFocus
+                  aria-label="Job title"
+                  className="w-80 max-w-full text-lg font-semibold"
+                  disabled={savingTitle}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => void saveTitle()}
+                  disabled={savingTitle || !titleDraft.trim()}
+                >
+                  {savingTitle ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <Check className="size-4" aria-hidden />
+                  )}
+                  Save
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingTitle(false)}
+                  disabled={savingTitle}
+                >
+                  <X className="size-4" aria-hidden />
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-semibold">{job.title}</h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={startEditTitle}
+                  aria-label="Edit job title"
+                  title="Edit job title"
+                >
+                  <Pencil className="size-4" aria-hidden />
+                </Button>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               {[job.company, job.location, job.seniority, job.employment_type]
                 .filter(Boolean)
