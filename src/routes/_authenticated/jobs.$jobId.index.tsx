@@ -165,8 +165,12 @@ function JobDetail() {
         .update({ title: next })
         .eq("id", job.id);
       if (error) throw new Error(error.message);
-      await queryClient.invalidateQueries({ queryKey: ["job", job.id, user?.id] });
       await queryClient.invalidateQueries({ queryKey: ["jobs", user?.id] });
+      // Any cached view keyed by this job (match report, tailored, preview,
+      // cover letter) also renders the title, so refresh them together.
+      await queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey.some((part) => part === job.id),
+      });
       toast.success("Job title updated.");
       setEditingTitle(false);
     } catch {
