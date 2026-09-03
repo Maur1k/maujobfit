@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, RefreshCcw, ScanSearch } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Pencil, RefreshCcw, ScanSearch, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/job-analysis";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -50,6 +51,9 @@ function JobDetail() {
   const queryClient = useQueryClient();
   const [retrying, setRetrying] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
 
   const jobQuery = useQuery({
     queryKey: ["job", jobId, user?.id],
