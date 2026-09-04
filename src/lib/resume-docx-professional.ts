@@ -29,8 +29,9 @@ import {
  * styles, real bullet numbering, real tab stops — no text boxes, tables or graphics.
  */
 
-const INK = "16161A";
-const MUTED = "5A5A62";
+// All rendered text is pure black for maximum print/ATS contrast.
+const INK = "000000";
+const MUTED = "000000";
 const RULE = "B0B0B8";
 
 const DOCX_PAGE_SIZES = {

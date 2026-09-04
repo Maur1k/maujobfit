@@ -12,12 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedMasterResumeRouteImport } from './routes/_authenticated/master-resume'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs.index'
 import { Route as AuthenticatedJobsJobIdIndexRouteImport } from './routes/_authenticated/jobs.$jobId.index'
+import { Route as AuthenticatedJobsJobIdApplyRouteImport } from './routes/_authenticated/jobs.$jobId.apply'
 import { Route as AuthenticatedJobsJobIdAtsRouteImport } from './routes/_authenticated/jobs.$jobId.ats'
 import { Route as AuthenticatedJobsJobIdCoverLetterRouteImport } from './routes/_authenticated/jobs.$jobId.cover-letter'
 import { Route as AuthenticatedJobsJobIdMatchRouteImport } from './routes/_authenticated/jobs.$jobId.match'
@@ -39,6 +41,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedApplicationsRoute =
+  AuthenticatedApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -69,6 +77,12 @@ const AuthenticatedJobsJobIdIndexRoute =
   AuthenticatedJobsJobIdIndexRouteImport.update({
     id: '/jobs/$jobId/',
     path: '/jobs/$jobId/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedJobsJobIdApplyRoute =
+  AuthenticatedJobsJobIdApplyRouteImport.update({
+    id: '/jobs/$jobId/apply',
+    path: '/jobs/$jobId/apply',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedJobsJobIdAtsRoute =
@@ -111,11 +125,13 @@ const AuthenticatedJobsJobIdVersionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/jobs/$jobId/apply': typeof AuthenticatedJobsJobIdApplyRoute
   '/jobs/$jobId/ats': typeof AuthenticatedJobsJobIdAtsRoute
   '/jobs/$jobId/cover-letter': typeof AuthenticatedJobsJobIdCoverLetterRoute
   '/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
@@ -127,11 +143,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
   '/master-resume': typeof AuthenticatedMasterResumeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
+  '/jobs/$jobId/apply': typeof AuthenticatedJobsJobIdApplyRoute
   '/jobs/$jobId/ats': typeof AuthenticatedJobsJobIdAtsRoute
   '/jobs/$jobId/cover-letter': typeof AuthenticatedJobsJobIdCoverLetterRoute
   '/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
@@ -145,11 +163,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/master-resume': typeof AuthenticatedMasterResumeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/_authenticated/jobs/$jobId/apply': typeof AuthenticatedJobsJobIdApplyRoute
   '/_authenticated/jobs/$jobId/ats': typeof AuthenticatedJobsJobIdAtsRoute
   '/_authenticated/jobs/$jobId/cover-letter': typeof AuthenticatedJobsJobIdCoverLetterRoute
   '/_authenticated/jobs/$jobId/match': typeof AuthenticatedJobsJobIdMatchRoute
@@ -163,11 +183,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/applications'
     | '/dashboard'
     | '/import'
     | '/master-resume'
     | '/profile'
     | '/jobs/'
+    | '/jobs/$jobId/apply'
     | '/jobs/$jobId/ats'
     | '/jobs/$jobId/cover-letter'
     | '/jobs/$jobId/match'
@@ -179,11 +201,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/applications'
     | '/dashboard'
     | '/import'
     | '/master-resume'
     | '/profile'
     | '/jobs'
+    | '/jobs/$jobId/apply'
     | '/jobs/$jobId/ats'
     | '/jobs/$jobId/cover-letter'
     | '/jobs/$jobId/match'
@@ -196,11 +220,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/applications'
     | '/_authenticated/dashboard'
     | '/_authenticated/import'
     | '/_authenticated/master-resume'
     | '/_authenticated/profile'
     | '/_authenticated/jobs/'
+    | '/_authenticated/jobs/$jobId/apply'
     | '/_authenticated/jobs/$jobId/ats'
     | '/_authenticated/jobs/$jobId/cover-letter'
     | '/_authenticated/jobs/$jobId/match'
@@ -238,6 +264,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/applications': {
+      id: '/_authenticated/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -279,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs/$jobId'
       fullPath: '/jobs/$jobId/'
       preLoaderRoute: typeof AuthenticatedJobsJobIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/jobs/$jobId/apply': {
+      id: '/_authenticated/jobs/$jobId/apply'
+      path: '/jobs/$jobId/apply'
+      fullPath: '/jobs/$jobId/apply'
+      preLoaderRoute: typeof AuthenticatedJobsJobIdApplyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/jobs/$jobId/ats': {
@@ -327,11 +367,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedMasterResumeRoute: typeof AuthenticatedMasterResumeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
+  AuthenticatedJobsJobIdApplyRoute: typeof AuthenticatedJobsJobIdApplyRoute
   AuthenticatedJobsJobIdAtsRoute: typeof AuthenticatedJobsJobIdAtsRoute
   AuthenticatedJobsJobIdCoverLetterRoute: typeof AuthenticatedJobsJobIdCoverLetterRoute
   AuthenticatedJobsJobIdMatchRoute: typeof AuthenticatedJobsJobIdMatchRoute
@@ -342,11 +384,13 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedMasterResumeRoute: AuthenticatedMasterResumeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
+  AuthenticatedJobsJobIdApplyRoute: AuthenticatedJobsJobIdApplyRoute,
   AuthenticatedJobsJobIdAtsRoute: AuthenticatedJobsJobIdAtsRoute,
   AuthenticatedJobsJobIdCoverLetterRoute:
     AuthenticatedJobsJobIdCoverLetterRoute,
