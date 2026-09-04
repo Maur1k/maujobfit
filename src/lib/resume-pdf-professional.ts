@@ -425,21 +425,40 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       const sectionItems = bySection(section);
       if (sectionItems.length === 0) return;
       sectionHeading(label, 26);
-      for (const item of sectionItems) {
+      sectionItems.forEach((item, itemIndex) => {
         const heading = (item.heading || "").trim();
+        const record = item.evidenceIds
+          .map((id) => input.evidence.get(id))
+          .find(Boolean) as ProEvidence | undefined;
+
+        if (itemIndex > 0) y += s(4);
+
         if (heading) {
           const headingLines = wrap(heading, 10.5, "bold", BODY_W);
           for (const line of headingLines) {
-            ensure(s(14));
+            ensure(s(13.6));
             setFont(10.5, "bold");
             doc.text(line, MARGIN_X, y + s(10.5));
-            y += s(14);
+            y += s(13.6);
           }
         }
-        block(item.statement.trim(), { size: 9.5, color: MUTED, leading: 12.2, gap: 2 });
-      }
+
+        // Institution · date on one muted line, mirroring the on-screen layout
+        const dates = record ? dateRange(record.start_date, record.end_date) : "";
+        const meta = [record?.organization, dates].filter(Boolean).join("  ·  ");
+        if (meta) block(meta, { size: 9.4, color: MUTED, leading: 12.2 });
+
+        const statement = item.statement.trim();
+        const normalized = statement.toLowerCase();
+        const duplicate =
+          normalized === heading.toLowerCase() ||
+          (!!meta && normalized === meta.toLowerCase()) ||
+          (!!record?.organization && normalized === record.organization.trim().toLowerCase());
+        if (statement && !duplicate) block(statement, { size: 9.5, leading: 12.2 });
+      });
       y += s(2);
     };
+
 
     renderSimple("education", "Education");
     renderSimple("certification", "Certifications");
