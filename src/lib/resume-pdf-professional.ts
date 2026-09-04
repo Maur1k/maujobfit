@@ -162,6 +162,49 @@ export function parseEducationItem(item: ProItem, record: ProEvidence | undefine
   };
 }
 
+/**
+ * Collapses certification items into one entry per credential:
+ * a title, a single "Issuer · Date" meta line, and any remaining detail text.
+ * Statements that merely repeat the issuer/date are dropped so the meta line
+ * is never printed twice.
+ */
+export function buildCertificationEntries(
+  items: ProItem[],
+  lookup: (id: string) => ProEvidence | undefined,
+) {
+  const entries: { title: string; meta: string; details: string[] }[] = [];
+  const byKey = new Map<string, { title: string; meta: string; details: string[] }>();
+
+  for (const item of items) {
+    const record = item.evidenceIds.map(lookup).find(Boolean);
+    const title = (item.heading || "").trim() || (record?.title || "").trim();
+    const dates = record ? dateRange(record.start_date, record.end_date) : "";
+    const meta = [record?.organization?.trim(), dates].filter(Boolean).join("  ·  ");
+
+    const key = `${normalizeEducationKey(title)}|${normalizeEducationKey(meta)}`;
+    let entry = byKey.get(key);
+    if (!entry) {
+      entry = { title, meta, details: [] };
+      byKey.set(key, entry);
+      entries.push(entry);
+    }
+
+    const statement = item.statement.trim();
+    if (!statement) continue;
+    const normalized = normalizeEducationKey(statement);
+    const redundant =
+      !normalized ||
+      normalized === normalizeEducationKey(title) ||
+      normalized === normalizeEducationKey(meta) ||
+      normalizeEducationKey(meta).includes(normalized) ||
+      normalized === normalizeEducationKey(record?.organization ?? "") ||
+      entry.details.some((detail) => normalizeEducationKey(detail) === normalized);
+    if (!redundant) entry.details.push(statement);
+  }
+
+  return entries.filter((entry) => entry.title || entry.meta || entry.details.length);
+}
+
 
 const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   {
