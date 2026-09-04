@@ -505,7 +505,52 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       }
     }
 
-    // ---------- Education & Certifications ----------
+    // ---------- Education ----------
+    const renderEducation = () => {
+      const sectionItems = bySection("education");
+      if (sectionItems.length === 0) return;
+
+      const groups = new Map<
+        string,
+        { degree: string; institution: string; date: string; majors: Set<string> }
+      >();
+
+      for (const item of sectionItems) {
+        const record = item.evidenceIds
+          .map((id) => input.evidence.get(id))
+          .find(Boolean) as ProEvidence | undefined;
+        const parsed = parseEducationItem(item, record);
+        const key = `${normalizeEducationKey(parsed.degree)}|${normalizeEducationKey(parsed.institution)}`;
+        const existing = groups.get(key);
+        if (existing) {
+          for (const major of parsed.majors) if (major) existing.majors.add(major);
+        } else {
+          groups.set(key, {
+            degree: parsed.degree,
+            institution: parsed.institution,
+            date: parsed.date,
+            majors: new Set(parsed.majors),
+          });
+        }
+      }
+
+      sectionHeading("Education", 26);
+
+      let groupIndex = 0;
+      for (const group of groups.values()) {
+        if (groupIndex > 0) y += s(4);
+        const degreeLine = [group.degree, group.date].filter(Boolean).join(" – ");
+        if (degreeLine) block(degreeLine, { size: 10.5, style: "bold", leading: 13.6 });
+        if (group.institution) block(group.institution, { size: 9.4, color: MUTED, leading: 12.2 });
+        for (const major of group.majors) {
+          block(major, { size: 9.5, leading: 12.2 });
+        }
+        groupIndex++;
+      }
+      y += s(2);
+    };
+
+    // ---------- Certifications ----------
     const renderSimple = (section: string, label: string) => {
       const sectionItems = bySection(section);
       if (sectionItems.length === 0) return;
@@ -528,7 +573,6 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           }
         }
 
-        // Institution · date on one muted line, mirroring the on-screen layout
         const dates = record ? dateRange(record.start_date, record.end_date) : "";
         const meta = [record?.organization, dates].filter(Boolean).join("  ·  ");
         if (meta) block(meta, { size: 9.4, color: MUTED, leading: 12.2 });
@@ -544,9 +588,9 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       y += s(2);
     };
 
-
-    renderSimple("education", "Education");
+    renderEducation();
     renderSimple("certification", "Certifications");
+
 
     return doc;
   };
