@@ -244,8 +244,13 @@ export function groupSkills(names: string[]) {
       ordered.push({ label, skills: list });
     }
   }
-  if (other.length)
-    ordered.push({ label: ordered.length ? "Additional" : "Skills", skills: other });
+  if (other.length) {
+    const hasToolLike = other.some((skill) => ADDITIONAL_TOOLS_RE.test(skill));
+    ordered.push({
+      label: ordered.length ? (hasToolLike ? "Additional Tools" : "Additional") : "Skills",
+      skills: other,
+    });
+  }
   return ordered;
 }
 
