@@ -37,6 +37,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/import")({
   head: () => ({
@@ -68,6 +78,8 @@ function ImportPage() {
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [mergeMode, setMergeMode] = useState<"append" | "replace">("append");
+  const [confirmReplace, setConfirmReplace] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [summaryDraft, setSummaryDraft] = useState<string | null>(null);
 
@@ -281,14 +293,26 @@ function ImportPage() {
         if (error) throw new Error(error.message);
       }
 
-      const { data: existing } = await supabase
-        .from("resume_items")
-        .select("sort_order")
-        .eq("master_resume_id", masterId)
-        .order("sort_order", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      let nextSort = (existing?.sort_order ?? -1) + 1;
+      let nextSort = 0;
+
+      if (mergeMode === "replace") {
+        // Replace mode: clear the existing entries (their bullets and evidence
+        // records cascade) so the Master Resume mirrors this import only.
+        const { error: clearError } = await supabase
+          .from("resume_items")
+          .delete()
+          .eq("master_resume_id", masterId);
+        if (clearError) throw new Error(clearError.message);
+      } else {
+        const { data: existing } = await supabase
+          .from("resume_items")
+          .select("sort_order")
+          .eq("master_resume_id", masterId)
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        nextSort = (existing?.sort_order ?? -1) + 1;
+      }
 
       const toMerge = items.filter((i) => i.status === "accepted" && !i.merged_resume_item_id);
       let bulletTotal = 0;
@@ -341,7 +365,9 @@ function ImportPage() {
       queryClient.invalidateQueries({ queryKey: ["dashboard", user.id] });
       refresh();
       toast.success(
-        `Merged ${toMerge.length} ${toMerge.length === 1 ? "entry" : "entries"} · ${
+        `${mergeMode === "replace" ? "Replaced your Master Resume with" : "Merged"} ${
+          toMerge.length
+        } ${toMerge.length === 1 ? "entry" : "entries"} · ${
           toMerge.length + bulletTotal
         } evidence records created`,
       );
@@ -525,7 +551,9 @@ function ImportPage() {
                     ) : (
                       <Button
                         size="sm"
-                        onClick={mergeAccepted}
+                        onClick={() =>
+                          mergeMode === "replace" ? setConfirmReplace(true) : mergeAccepted()
+                        }
                         disabled={
                           merging ||
                           (acceptedCount === 0 &&
@@ -538,12 +566,59 @@ function ImportPage() {
                         ) : (
                           <Upload className="size-4" aria-hidden />
                         )}
-                        Merge accepted ({acceptedCount})
+                        {mergeMode === "replace"
+                          ? `Replace Master Resume (${acceptedCount})`
+                          : `Merge accepted (${acceptedCount})`}
                       </Button>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {!locked && (
+                    <fieldset className="space-y-2">
+                      <legend className="text-sm font-medium">How should this be applied?</legend>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {(
+                          [
+                            {
+                              value: "append" as const,
+                              label: "Add to Master Resume",
+                              hint: "Keeps everything already in your Master Resume and appends the accepted entries.",
+                            },
+                            {
+                              value: "replace" as const,
+                              label: "Replace Master Resume",
+                              hint: "Deletes your current entries, bullets and their evidence records, then writes only the accepted entries from this PDF.",
+                            },
+                          ]
+                        ).map((option) => (
+                          <label
+                            key={option.value}
+                            className={`flex cursor-pointer gap-3 rounded-md border p-3 text-sm transition-colors ${
+                              mergeMode === option.value
+                                ? "border-evidence/50 bg-evidence/5"
+                                : "border-border hover:bg-secondary/50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="merge-mode"
+                              className="mt-1 size-4 accent-[hsl(var(--evidence))]"
+                              value={option.value}
+                              checked={mergeMode === option.value}
+                              onChange={() => setMergeMode(option.value)}
+                            />
+                            <span className="space-y-1">
+                              <span className="block font-medium">{option.label}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {option.hint}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
                   <div className="flex flex-wrap gap-2 text-xs">
                     <Badge variant="outline" className="gap-1">
                       <ShieldCheck className="size-3 text-evidence" aria-hidden />
@@ -712,6 +787,32 @@ function ImportPage() {
           )}
         </div>
       ) : null}
+
+      <AlertDialog open={confirmReplace} onOpenChange={setConfirmReplace}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace your Master Resume?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes every entry, bullet and evidence record currently in your
+              Master Resume, then writes the {acceptedCount} accepted{" "}
+              {acceptedCount === 1 ? "entry" : "entries"} from this PDF. Previously generated
+              tailored resumes and exports are kept, but their citations will point to removed
+              records. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmReplace(false);
+                mergeAccepted();
+              }}
+            >
+              Replace Master Resume
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
