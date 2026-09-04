@@ -283,14 +283,26 @@ function ImportPage() {
         if (error) throw new Error(error.message);
       }
 
-      const { data: existing } = await supabase
-        .from("resume_items")
-        .select("sort_order")
-        .eq("master_resume_id", masterId)
-        .order("sort_order", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      let nextSort = (existing?.sort_order ?? -1) + 1;
+      let nextSort = 0;
+
+      if (mergeMode === "replace") {
+        // Replace mode: clear the existing entries (their bullets and evidence
+        // records cascade) so the Master Resume mirrors this import only.
+        const { error: clearError } = await supabase
+          .from("resume_items")
+          .delete()
+          .eq("master_resume_id", masterId);
+        if (clearError) throw new Error(clearError.message);
+      } else {
+        const { data: existing } = await supabase
+          .from("resume_items")
+          .select("sort_order")
+          .eq("master_resume_id", masterId)
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        nextSort = (existing?.sort_order ?? -1) + 1;
+      }
 
       const toMerge = items.filter((i) => i.status === "accepted" && !i.merged_resume_item_id);
       let bulletTotal = 0;
