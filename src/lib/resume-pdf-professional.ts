@@ -428,10 +428,13 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       for (const item of sectionItems) {
         const heading = (item.heading || "").trim();
         if (heading) {
-          ensure(s(14));
-          setFont(10.5, "bold");
-          doc.text(heading, MARGIN_X, y + s(10.5));
-          y += s(14);
+          const headingLines = wrap(heading, 10.5, "bold", BODY_W);
+          for (const line of headingLines) {
+            ensure(s(14));
+            setFont(10.5, "bold");
+            doc.text(line, MARGIN_X, y + s(10.5));
+            y += s(14);
+          }
         }
         block(item.statement.trim(), { size: 9.5, color: MUTED, leading: 12.2, gap: 2 });
       }
