@@ -401,7 +401,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       for (const group of grouped) {
         const labelText = `${group.label}: `;
         setFont(9.5, "bold");
-        const labelWidth = doc.getTextWidth(labelText);
+        const labelWidth = doc.getTextWidth(labelText) + s(2);
         const lines = wrap(group.skills.join(", "), 9.5, "normal", BODY_W - labelWidth);
         const leading = s(13);
         ensure(leading * Math.min(lines.length, 2));
