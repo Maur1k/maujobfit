@@ -14,10 +14,13 @@ import {
 import {
   dateRange,
   groupSkills,
+  normalizeEducationKey,
+  parseEducationItem,
   type BuildProfessionalPdfInput,
   type ProEvidence,
   type ProItem,
 } from "@/lib/resume-pdf-professional";
+
 
 /**
  * Recruiter-facing DOCX renderer.
