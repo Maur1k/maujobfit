@@ -607,17 +607,14 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     const renderSimple = (section: string, label: string) => {
       const sectionItems = bySection(section);
       if (sectionItems.length === 0) return;
+      const entries = buildCertificationEntries(sectionItems, (id) => input.evidence.get(id));
+      if (entries.length === 0) return;
       sectionHeading(label, 26);
-      sectionItems.forEach((item, itemIndex) => {
-        const heading = (item.heading || "").trim();
-        const record = item.evidenceIds
-          .map((id) => input.evidence.get(id))
-          .find(Boolean) as ProEvidence | undefined;
+      entries.forEach((entry, entryIndex) => {
+        if (entryIndex > 0) y += s(4);
 
-        if (itemIndex > 0) y += s(4);
-
-        if (heading) {
-          const headingLines = wrap(heading, 10.5, "bold", BODY_W);
+        if (entry.title) {
+          const headingLines = wrap(entry.title, 10.5, "bold", BODY_W);
           for (const line of headingLines) {
             ensure(s(13.6));
             setFont(10.5, "bold");
@@ -626,20 +623,12 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           }
         }
 
-        const dates = record ? dateRange(record.start_date, record.end_date) : "";
-        const meta = [record?.organization, dates].filter(Boolean).join("  ·  ");
-        if (meta) block(meta, { size: 9.4, color: MUTED, leading: 12.2 });
-
-        const statement = item.statement.trim();
-        const normalized = statement.toLowerCase();
-        const duplicate =
-          normalized === heading.toLowerCase() ||
-          (!!meta && normalized === meta.toLowerCase()) ||
-          (!!record?.organization && normalized === record.organization.trim().toLowerCase());
-        if (statement && !duplicate) block(statement, { size: 9.5, leading: 12.2 });
+        if (entry.meta) block(entry.meta, { size: 9.4, color: MUTED, leading: 12.2 });
+        for (const detail of entry.details) block(detail, { size: 9.5, leading: 12.2 });
       });
       y += s(2);
     };
+
 
     renderEducation();
     renderSimple("certification", "Certifications");
