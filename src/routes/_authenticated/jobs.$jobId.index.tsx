@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Pencil, RefreshCcw, ScanSearch, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Pencil, RefreshCcw, ScanSearch, SendHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -265,6 +265,12 @@ function JobDetail() {
               <Link to="/jobs/$jobId/match" params={{ jobId: job.id }}>
                 <ScanSearch className="size-4" aria-hidden />
                 Match report
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="default">
+              <Link to="/jobs/$jobId/apply" params={{ jobId: job.id }}>
+                <SendHorizontal className="size-4" aria-hidden />
+                Apply
               </Link>
             </Button>
             <Button variant="outline" size="sm" disabled={retrying} onClick={() => void retry()}>
