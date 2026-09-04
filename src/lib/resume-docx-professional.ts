@@ -254,6 +254,62 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
     }
   }
 
+  const renderEducation = () => {
+    const sectionItems = bySection("education");
+    if (sectionItems.length === 0) return;
+
+    const groups = new Map<
+      string,
+      { degree: string; institution: string; date: string; majors: Set<string> }
+    >();
+
+    for (const item of sectionItems) {
+      const record = item.evidenceIds
+        .map((id) => input.evidence.get(id))
+        .find(Boolean) as ProEvidence | undefined;
+      const parsed = parseEducationItem(item, record);
+      const key = `${normalizeEducationKey(parsed.degree)}|${normalizeEducationKey(parsed.institution)}`;
+      const existing = groups.get(key);
+      if (existing) {
+        for (const major of parsed.majors) if (major) existing.majors.add(major);
+      } else {
+        groups.set(key, {
+          degree: parsed.degree,
+          institution: parsed.institution,
+          date: parsed.date,
+          majors: new Set(parsed.majors),
+        });
+      }
+    }
+
+    sectionHeading("Education");
+
+    for (const group of groups.values()) {
+      const degreeLine = [group.degree, group.date].filter(Boolean).join(" – ");
+      if (degreeLine) {
+        children.push(
+          new Paragraph({
+            keepNext: true,
+            spacing: { before: 100, after: 20 },
+            children: [new TextRun({ text: degreeLine, bold: true, size: 21, color: INK })],
+          }),
+        );
+      }
+      if (group.institution) {
+        children.push(
+          new Paragraph({
+            keepNext: true,
+            spacing: { after: 20 },
+            children: [new TextRun({ text: group.institution, size: 19, color: MUTED })],
+          }),
+        );
+      }
+      for (const major of group.majors) {
+        children.push(bodyParagraph(major));
+      }
+    }
+  };
+
   const renderSimple = (section: string, label: string) => {
     const sectionItems = bySection(section);
     if (sectionItems.length === 0) return;
@@ -273,8 +329,9 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
     }
   };
 
-  renderSimple("education", "Education");
+  renderEducation();
   renderSimple("certification", "Certifications");
+
 
   const doc = new Document({
     styles: {
