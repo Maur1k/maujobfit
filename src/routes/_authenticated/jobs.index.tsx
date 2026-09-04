@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, Briefcase, Loader2, RefreshCcw, Sparkles } from "lucide-react";
+import { AlertTriangle, Briefcase, Loader2, RefreshCcw, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,16 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/jobs/")({
   head: () => ({
@@ -52,6 +62,8 @@ function JobsPage() {
   const [rawText, setRawText] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<JobRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const jobsQuery = useQuery({
     queryKey: ["jobs", user?.id],
@@ -105,6 +117,34 @@ function JobsPage() {
     }
     await analyze(job.id, job.raw_text);
   };
+
+  const confirmDelete = async () => {
+    if (!jobToDelete) return;
+    setDeleting(true);
+    try {
+      // Remove tailored resumes generated for this job first so no orphaned
+      // drafts, exports or cover letters are left behind (cascade handles children).
+      const { error: tailoredError } = await supabase
+        .from("tailored_resumes")
+        .delete()
+        .eq("job_id", jobToDelete.id);
+      if (tailoredError) throw new Error(tailoredError.message);
+
+      const { error } = await supabase.from("jobs").delete().eq("id", jobToDelete.id);
+      if (error) throw new Error(error.message);
+
+      await queryClient.invalidateQueries({ queryKey: ["jobs", user?.id] });
+      toast.success(`Deleted "${jobToDelete.title}"`);
+      setJobToDelete(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "We couldn't delete that job. Please retry.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   return (
     <div className="space-y-8">
@@ -243,6 +283,17 @@ function JobsPage() {
                         </Link>
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={`Delete ${job.title}`}
+                      disabled={deleting}
+                      onClick={() => setJobToDelete(job)}
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                      <span className="sr-only sm:not-sr-only">Delete</span>
+                    </Button>
                   </div>
                 </li>
               ))}
@@ -259,6 +310,37 @@ function JobsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={!!jobToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setJobToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{jobToDelete?.title}" and everything generated from it — requirements, match report,
+              tailored resume drafts, cover letters and exports — will be permanently removed. Your
+              Master Resume is not affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDelete();
+              }}
+            >
+              {deleting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              Delete job
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
