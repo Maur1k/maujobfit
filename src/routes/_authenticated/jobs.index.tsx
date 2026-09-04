@@ -283,6 +283,12 @@ function JobsPage() {
                         </Link>
                       </Button>
                     )}
+                    <Button asChild size="sm" variant="default">
+                      <Link to="/jobs/$jobId/apply" params={{ jobId: job.id }}>
+                        <SendHorizontal className="size-4" aria-hidden />
+                        Apply
+                      </Link>
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
