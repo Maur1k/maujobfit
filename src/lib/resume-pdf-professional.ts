@@ -78,6 +78,91 @@ export function dateRange(start: string | null | undefined, end: string | null |
   return to;
 }
 
+function educationYear(value: string | null | undefined) {
+  if (!value) return null;
+  const match = /\b(19|20)\d{2}\b/.exec(value);
+  return match ? match[0] : null;
+}
+
+export function educationDate(record: ProEvidence | undefined) {
+  if (!record) return "";
+  const startYear = educationYear(record.start_date);
+  const endYear = educationYear(record.end_date);
+  if (startYear && endYear) return `${startYear} – ${endYear}`;
+  if (endYear) return `Batch ${endYear}`;
+  if (startYear) return `${startYear} – Present`;
+  return "";
+}
+
+export function normalizeEducationKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function isRedundant(part: string, reference: string) {
+  if (!reference || !part) return false;
+  const p = normalizeEducationKey(part);
+  const r = normalizeEducationKey(reference);
+  return p === r || r.includes(p) || p.includes(r);
+}
+
+export function parseEducationItem(item: ProItem, record: ProEvidence | undefined) {
+  const heading = (item.heading || "").trim();
+  const statement = item.statement.trim();
+
+  let degree = "";
+  let majorFromHeading = "";
+  let institution = "";
+
+  const dashParts = heading.split(/ — /).map((s) => s.trim());
+  if (dashParts.length >= 2) {
+    institution = dashParts[dashParts.length - 1]!;
+    const beforeInstitution = dashParts.slice(0, -1).join(" — ");
+    const pipeParts = beforeInstitution.split(" | ").map((s) => s.trim()).filter(Boolean);
+    degree = pipeParts[0] || "";
+    majorFromHeading = pipeParts.slice(1).join(" · ");
+  } else {
+    const pipeParts = heading.split(" | ").map((s) => s.trim()).filter(Boolean);
+    degree = pipeParts[0] || "";
+    majorFromHeading = pipeParts.slice(1).join(" · ");
+  }
+
+  if (!institution && record?.organization) institution = record.organization.trim();
+  if (!degree && record?.title) {
+    const parts = record.title.split(" | ").map((s) => s.trim()).filter(Boolean);
+    degree = parts[0] || record.title;
+  }
+
+  const datePatterns = [
+    /Batch\s+(19|20)\d{2}/gi,
+    /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(19|20)\d{2}/gi,
+    /(19|20)\d{2}\s*–\s*(19|20)\d{2}/g,
+    /–\s*(19|20)\d{2}/g,
+    /\b(19|20)\d{2}\b/g,
+  ];
+  let cleanedStatement = statement;
+  for (const pattern of datePatterns) {
+    cleanedStatement = cleanedStatement.replace(pattern, "");
+  }
+
+  const statementParts = cleanedStatement
+    .split(/[·|]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 1)
+    .filter((s) => !isRedundant(s, degree) && !isRedundant(s, institution));
+
+  const majors = new Set<string>();
+  if (majorFromHeading) majors.add(majorFromHeading);
+  for (const part of statementParts) majors.add(part);
+
+  return {
+    degree,
+    institution,
+    date: educationDate(record),
+    majors: [...majors],
+  };
+}
+
+
 const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   {
     label: "Languages",
@@ -420,7 +505,52 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       }
     }
 
-    // ---------- Education & Certifications ----------
+    // ---------- Education ----------
+    const renderEducation = () => {
+      const sectionItems = bySection("education");
+      if (sectionItems.length === 0) return;
+
+      const groups = new Map<
+        string,
+        { degree: string; institution: string; date: string; majors: Set<string> }
+      >();
+
+      for (const item of sectionItems) {
+        const record = item.evidenceIds
+          .map((id) => input.evidence.get(id))
+          .find(Boolean) as ProEvidence | undefined;
+        const parsed = parseEducationItem(item, record);
+        const key = `${normalizeEducationKey(parsed.degree)}|${normalizeEducationKey(parsed.institution)}`;
+        const existing = groups.get(key);
+        if (existing) {
+          for (const major of parsed.majors) if (major) existing.majors.add(major);
+        } else {
+          groups.set(key, {
+            degree: parsed.degree,
+            institution: parsed.institution,
+            date: parsed.date,
+            majors: new Set(parsed.majors),
+          });
+        }
+      }
+
+      sectionHeading("Education", 26);
+
+      let groupIndex = 0;
+      for (const group of groups.values()) {
+        if (groupIndex > 0) y += s(4);
+        const degreeLine = [group.degree, group.date].filter(Boolean).join(" – ");
+        if (degreeLine) block(degreeLine, { size: 10.5, style: "bold", leading: 13.6 });
+        if (group.institution) block(group.institution, { size: 9.4, color: MUTED, leading: 12.2 });
+        for (const major of group.majors) {
+          block(major, { size: 9.5, leading: 12.2 });
+        }
+        groupIndex++;
+      }
+      y += s(2);
+    };
+
+    // ---------- Certifications ----------
     const renderSimple = (section: string, label: string) => {
       const sectionItems = bySection(section);
       if (sectionItems.length === 0) return;
@@ -443,7 +573,6 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           }
         }
 
-        // Institution · date on one muted line, mirroring the on-screen layout
         const dates = record ? dateRange(record.start_date, record.end_date) : "";
         const meta = [record?.organization, dates].filter(Boolean).join("  ·  ");
         if (meta) block(meta, { size: 9.4, color: MUTED, leading: 12.2 });
@@ -459,9 +588,9 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       y += s(2);
     };
 
-
-    renderSimple("education", "Education");
+    renderEducation();
     renderSimple("certification", "Certifications");
+
 
     return doc;
   };
