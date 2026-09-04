@@ -317,8 +317,8 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
         properties: {
           page: {
             size: {
-              width: DOCX_PAGE_SIZES[input.paperSize ?? "letter"].width,
-              height: DOCX_PAGE_SIZES[input.paperSize ?? "letter"].height,
+              width: DOCX_PAGE_SIZES[input.paperSize ?? "a4"].width,
+              height: DOCX_PAGE_SIZES[input.paperSize ?? "a4"].height,
             },
             margin: { top: 1080, right: 1440, bottom: 1080, left: 1440 },
           },
@@ -338,6 +338,6 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
   return {
     fileName: `${slug || "resume"}-resume.docx`,
     blob: () => Packer.toBlob(doc),
-    contentWidth: DOCX_PAGE_SIZES[input.paperSize ?? "letter"].contentWidth,
+    contentWidth: DOCX_PAGE_SIZES[input.paperSize ?? "a4"].contentWidth,
   };
 }
