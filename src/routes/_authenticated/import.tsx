@@ -777,6 +777,32 @@ function ImportPage() {
           )}
         </div>
       ) : null}
+
+      <AlertDialog open={confirmReplace} onOpenChange={setConfirmReplace}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace your Master Resume?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes every entry, bullet and evidence record currently in your
+              Master Resume, then writes the {acceptedCount} accepted{" "}
+              {acceptedCount === 1 ? "entry" : "entries"} from this PDF. Previously generated
+              tailored resumes and exports are kept, but their citations will point to removed
+              records. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmReplace(false);
+                mergeAccepted();
+              }}
+            >
+              Replace Master Resume
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
