@@ -9,7 +9,7 @@ export const RESUME_LENGTHS = ["one_page", "two_page"] as const;
 export const TAILORING_LEVELS = ["conservative", "balanced", "aggressive"] as const;
 export const PROJECT_INCLUSIONS = ["most_relevant", "relevant_supporting", "all"] as const;
 export const SKILLS_SCOPES = ["job_only", "relevant_supporting", "full_master"] as const;
-export const PAPER_SIZES = ["letter", "a4"] as const;
+export const PAPER_SIZES = ["a4"] as const;
 
 export type ResumeLength = (typeof RESUME_LENGTHS)[number];
 export type TailoringLevel = (typeof TAILORING_LEVELS)[number];
