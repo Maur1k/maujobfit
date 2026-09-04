@@ -267,6 +267,12 @@ function JobDetail() {
                 Match report
               </Link>
             </Button>
+            <Button asChild size="sm" variant="default">
+              <Link to="/jobs/$jobId/apply" params={{ jobId: job.id }}>
+                <SendHorizontal className="size-4" aria-hidden />
+                Apply
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" disabled={retrying} onClick={() => void retry()}>
               {retrying ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden />
