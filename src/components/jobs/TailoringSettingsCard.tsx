@@ -165,16 +165,6 @@ export function TailoringSettingsCard({
                 }
               />
               <ChoiceGroup
-                id="paper-size"
-                title="Paper size"
-                hint="Target document page dimensions for export."
-                options={PAPER_SIZE_OPTIONS}
-                value={draft.paper_size}
-                onChange={(value) =>
-                  setDraft({ ...draft, paper_size: value as TailoringSettings["paper_size"] })
-                }
-              />
-              <ChoiceGroup
                 id="tailoring-level"
                 title="Tailoring level"
                 hint="How hard the composition leans into this posting."
