@@ -245,7 +245,7 @@ export function normaliseSettings(input: unknown): TailoringSettings {
 export function settingsSummary(settings: TailoringSettings) {
   return [
     resumeLengthLabel[settings.resume_length],
-    settings.paper_size === "a4" ? "A4" : "Letter",
+    "A4",
     tailoringLevelLabel[settings.tailoring_level],
     `Projects: ${projectInclusionLabel[settings.project_inclusion]}`,
     `Skills: ${skillsScopeLabel[settings.skills_scope]}`,

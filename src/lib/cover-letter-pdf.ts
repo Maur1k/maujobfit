@@ -27,7 +27,7 @@ const INK: [number, number, number] = [22, 22, 26];
 const MUTED: [number, number, number] = [102, 102, 110];
 
 export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
-  const paperSize = input.paperSize ?? "letter";
+  const paperSize = input.paperSize ?? "a4";
   const { width: PAGE_W, height: PAGE_H } = PAGE_DIMENSIONS[paperSize];
   const MARGIN_X = 52;
   const MARGIN_Y = 48;
