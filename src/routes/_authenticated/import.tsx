@@ -68,6 +68,8 @@ function ImportPage() {
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [mergeMode, setMergeMode] = useState<"append" | "replace">("append");
+  const [confirmReplace, setConfirmReplace] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [summaryDraft, setSummaryDraft] = useState<string | null>(null);
 
