@@ -283,6 +283,17 @@ function JobsPage() {
                         </Link>
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={`Delete ${job.title}`}
+                      disabled={deleting}
+                      onClick={() => setJobToDelete(job)}
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                      <span className="sr-only sm:not-sr-only">Delete</span>
+                    </Button>
                   </div>
                 </li>
               ))}
