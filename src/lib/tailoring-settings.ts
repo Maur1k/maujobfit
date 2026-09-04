@@ -32,11 +32,11 @@ export type TailoringSettings = {
 };
 
 export const DEFAULT_TAILORING_SETTINGS: TailoringSettings = {
-  resume_length: "two_page",
+  resume_length: "one_page",
   tailoring_level: "balanced",
   project_inclusion: "relevant_supporting",
   skills_scope: "relevant_supporting",
-  paper_size: "letter",
+  paper_size: "a4",
   include_summary: true,
   include_experience: true,
   include_projects: true,
