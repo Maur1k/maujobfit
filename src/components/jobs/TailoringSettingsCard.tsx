@@ -9,7 +9,6 @@ import { saveTailoringSettings } from "@/lib/composition.functions";
 import {
   DEFAULT_TAILORING_SETTINGS,
   normaliseSettings,
-  PAPER_SIZE_OPTIONS,
   PROJECT_INCLUSION_OPTIONS,
   RESUME_LENGTH_OPTIONS,
   SECTION_TOGGLES,
