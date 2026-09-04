@@ -12,6 +12,7 @@ import {
 } from "docx";
 
 import {
+  buildCertificationEntries,
   dateRange,
   groupSkills,
   normalizeEducationKey,
