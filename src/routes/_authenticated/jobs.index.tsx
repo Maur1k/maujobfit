@@ -310,6 +310,37 @@ function JobsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={!!jobToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setJobToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{jobToDelete?.title}" and everything generated from it — requirements, match report,
+              tailored resume drafts, cover letters and exports — will be permanently removed. Your
+              Master Resume is not affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDelete();
+              }}
+            >
+              {deleting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              Delete job
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
