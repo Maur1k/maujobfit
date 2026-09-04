@@ -12,6 +12,7 @@ import {
 } from "docx";
 
 import {
+  buildCertificationEntries,
   dateRange,
   groupSkills,
   normalizeEducationKey,
@@ -313,21 +314,32 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
   const renderSimple = (section: string, label: string) => {
     const sectionItems = bySection(section);
     if (sectionItems.length === 0) return;
+    const entries = buildCertificationEntries(sectionItems, (id) => input.evidence.get(id));
+    if (entries.length === 0) return;
     sectionHeading(label);
-    for (const item of sectionItems) {
-      const heading = (item.heading || "").trim();
-      if (heading) {
+    for (const entry of entries) {
+      if (entry.title) {
         children.push(
           new Paragraph({
             keepNext: true,
             spacing: { before: 100, after: 20 },
-            children: [new TextRun({ text: heading, bold: true, size: 21, color: INK })],
+            children: [new TextRun({ text: entry.title, bold: true, size: 21, color: INK })],
           }),
         );
       }
-      children.push(bodyParagraph(item.statement.trim()));
+      if (entry.meta) {
+        children.push(
+          new Paragraph({
+            keepNext: true,
+            spacing: { after: 20 },
+            children: [new TextRun({ text: entry.meta, size: 19, color: MUTED })],
+          }),
+        );
+      }
+      for (const detail of entry.details) children.push(bodyParagraph(detail));
     }
   };
+
 
   renderEducation();
   renderSimple("certification", "Certifications");
