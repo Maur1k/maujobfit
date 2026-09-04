@@ -541,7 +541,9 @@ function ImportPage() {
                     ) : (
                       <Button
                         size="sm"
-                        onClick={mergeAccepted}
+                        onClick={() =>
+                          mergeMode === "replace" ? setConfirmReplace(true) : mergeAccepted()
+                        }
                         disabled={
                           merging ||
                           (acceptedCount === 0 &&
@@ -554,12 +556,59 @@ function ImportPage() {
                         ) : (
                           <Upload className="size-4" aria-hidden />
                         )}
-                        Merge accepted ({acceptedCount})
+                        {mergeMode === "replace"
+                          ? `Replace Master Resume (${acceptedCount})`
+                          : `Merge accepted (${acceptedCount})`}
                       </Button>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {!locked && (
+                    <fieldset className="space-y-2">
+                      <legend className="text-sm font-medium">How should this be applied?</legend>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {(
+                          [
+                            {
+                              value: "append" as const,
+                              label: "Add to Master Resume",
+                              hint: "Keeps everything already in your Master Resume and appends the accepted entries.",
+                            },
+                            {
+                              value: "replace" as const,
+                              label: "Replace Master Resume",
+                              hint: "Deletes your current entries, bullets and their evidence records, then writes only the accepted entries from this PDF.",
+                            },
+                          ]
+                        ).map((option) => (
+                          <label
+                            key={option.value}
+                            className={`flex cursor-pointer gap-3 rounded-md border p-3 text-sm transition-colors ${
+                              mergeMode === option.value
+                                ? "border-evidence/50 bg-evidence/5"
+                                : "border-border hover:bg-secondary/50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="merge-mode"
+                              className="mt-1 size-4 accent-[hsl(var(--evidence))]"
+                              value={option.value}
+                              checked={mergeMode === option.value}
+                              onChange={() => setMergeMode(option.value)}
+                            />
+                            <span className="space-y-1">
+                              <span className="block font-medium">{option.label}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {option.hint}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
                   <div className="flex flex-wrap gap-2 text-xs">
                     <Badge variant="outline" className="gap-1">
                       <ShieldCheck className="size-3 text-evidence" aria-hidden />
