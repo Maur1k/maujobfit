@@ -69,7 +69,6 @@ export const skillsScopeLabel: Record<SkillsScope, string> = {
 };
 
 export const paperSizeLabel: Record<PaperSize, string> = {
-  letter: "US Letter (8.5 × 11 in)",
   a4: "A4 (210 × 297 mm)",
 };
 
