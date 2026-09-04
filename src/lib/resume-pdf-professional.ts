@@ -190,6 +190,11 @@ const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   },
 ];
 
+// Broadly detects skills that are clearly tools/platforms so the fallback
+// bucket is labeled "Additional Tools" instead of plain "Additional".
+const ADDITIONAL_TOOLS_RE =
+  /git|github|gitlab|cPanel|codemagic|paymongo|vercel|netlify|postman|insomnia|docker|kubernetes|aws|azure|gcp|jira|figma|sketch|jenkins|circleci|travis|webpack|vite|rollup|wordpress|shopify|webflow|contentful|strapi|ci\/cd|tools?/i;
+
 export function groupSkills(names: string[]) {
   const explicit = new Map<string, string[]>();
   const explicitOrder: string[] = [];
@@ -239,8 +244,13 @@ export function groupSkills(names: string[]) {
       ordered.push({ label, skills: list });
     }
   }
-  if (other.length)
-    ordered.push({ label: ordered.length ? "Additional" : "Skills", skills: other });
+  if (other.length) {
+    const hasToolLike = other.some((skill) => ADDITIONAL_TOOLS_RE.test(skill));
+    ordered.push({
+      label: ordered.length ? (hasToolLike ? "Additional Tools" : "Additional") : "Skills",
+      skills: other,
+    });
+  }
   return ordered;
 }
 
