@@ -89,14 +89,9 @@ export const RESUME_LENGTH_OPTIONS: Option<ResumeLength>[] = [
 
 export const PAPER_SIZE_OPTIONS: Option<PaperSize>[] = [
   {
-    value: "letter",
-    label: paperSizeLabel.letter,
-    description: "Standard for US and Canada ATS systems and recruiter printing.",
-  },
-  {
     value: "a4",
     label: paperSizeLabel.a4,
-    description: "Standard for UK, Europe, Australia, and international recruiters.",
+    description: "Standard international page size for recruiters and ATS systems.",
   },
 ];
 
