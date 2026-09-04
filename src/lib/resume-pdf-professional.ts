@@ -78,6 +78,91 @@ export function dateRange(start: string | null | undefined, end: string | null |
   return to;
 }
 
+function educationYear(value: string | null | undefined) {
+  if (!value) return null;
+  const match = /\b(19|20)\d{2}\b/.exec(value);
+  return match ? match[0] : null;
+}
+
+export function educationDate(record: ProEvidence | undefined) {
+  if (!record) return "";
+  const startYear = educationYear(record.start_date);
+  const endYear = educationYear(record.end_date);
+  if (startYear && endYear) return `${startYear} – ${endYear}`;
+  if (endYear) return `Batch ${endYear}`;
+  if (startYear) return `${startYear} – Present`;
+  return "";
+}
+
+export function normalizeEducationKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function isRedundant(part: string, reference: string) {
+  if (!reference || !part) return false;
+  const p = normalizeEducationKey(part);
+  const r = normalizeEducationKey(reference);
+  return p === r || r.includes(p) || p.includes(r);
+}
+
+export function parseEducationItem(item: ProItem, record: ProEvidence | undefined) {
+  const heading = (item.heading || "").trim();
+  const statement = item.statement.trim();
+
+  let degree = "";
+  let majorFromHeading = "";
+  let institution = "";
+
+  const dashParts = heading.split(/ — /).map((s) => s.trim());
+  if (dashParts.length >= 2) {
+    institution = dashParts[dashParts.length - 1]!;
+    const beforeInstitution = dashParts.slice(0, -1).join(" — ");
+    const pipeParts = beforeInstitution.split(" | ").map((s) => s.trim()).filter(Boolean);
+    degree = pipeParts[0] || "";
+    majorFromHeading = pipeParts.slice(1).join(" · ");
+  } else {
+    const pipeParts = heading.split(" | ").map((s) => s.trim()).filter(Boolean);
+    degree = pipeParts[0] || "";
+    majorFromHeading = pipeParts.slice(1).join(" · ");
+  }
+
+  if (!institution && record?.organization) institution = record.organization.trim();
+  if (!degree && record?.title) {
+    const parts = record.title.split(" | ").map((s) => s.trim()).filter(Boolean);
+    degree = parts[0] || record.title;
+  }
+
+  const datePatterns = [
+    /Batch\s+(19|20)\d{2}/gi,
+    /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(19|20)\d{2}/gi,
+    /(19|20)\d{2}\s*–\s*(19|20)\d{2}/g,
+    /–\s*(19|20)\d{2}/g,
+    /\b(19|20)\d{2}\b/g,
+  ];
+  let cleanedStatement = statement;
+  for (const pattern of datePatterns) {
+    cleanedStatement = cleanedStatement.replace(pattern, "");
+  }
+
+  const statementParts = cleanedStatement
+    .split(/[·|]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 1)
+    .filter((s) => !isRedundant(s, degree) && !isRedundant(s, institution));
+
+  const majors = new Set<string>();
+  if (majorFromHeading) majors.add(majorFromHeading);
+  for (const part of statementParts) majors.add(part);
+
+  return {
+    degree,
+    institution,
+    date: educationDate(record),
+    majors: [...majors],
+  };
+}
+
+
 const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   {
     label: "Languages",
