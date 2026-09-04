@@ -62,6 +62,8 @@ function JobsPage() {
   const [rawText, setRawText] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<JobRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const jobsQuery = useQuery({
     queryKey: ["jobs", user?.id],
