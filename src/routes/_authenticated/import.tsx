@@ -355,7 +355,9 @@ function ImportPage() {
       queryClient.invalidateQueries({ queryKey: ["dashboard", user.id] });
       refresh();
       toast.success(
-        `Merged ${toMerge.length} ${toMerge.length === 1 ? "entry" : "entries"} · ${
+        `${mergeMode === "replace" ? "Replaced your Master Resume with" : "Merged"} ${
+          toMerge.length
+        } ${toMerge.length === 1 ? "entry" : "entries"} · ${
           toMerge.length + bulletTotal
         } evidence records created`,
       );
