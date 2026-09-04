@@ -118,6 +118,34 @@ function JobsPage() {
     await analyze(job.id, job.raw_text);
   };
 
+  const confirmDelete = async () => {
+    if (!jobToDelete) return;
+    setDeleting(true);
+    try {
+      // Remove tailored resumes generated for this job first so no orphaned
+      // drafts, exports or cover letters are left behind (cascade handles children).
+      const { error: tailoredError } = await supabase
+        .from("tailored_resumes")
+        .delete()
+        .eq("job_id", jobToDelete.id);
+      if (tailoredError) throw new Error(tailoredError.message);
+
+      const { error } = await supabase.from("jobs").delete().eq("id", jobToDelete.id);
+      if (error) throw new Error(error.message);
+
+      await queryClient.invalidateQueries({ queryKey: ["jobs", user?.id] });
+      toast.success(`Deleted "${jobToDelete.title}"`);
+      setJobToDelete(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "We couldn't delete that job. Please retry.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
