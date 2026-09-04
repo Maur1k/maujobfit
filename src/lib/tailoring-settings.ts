@@ -9,7 +9,7 @@ export const RESUME_LENGTHS = ["one_page", "two_page"] as const;
 export const TAILORING_LEVELS = ["conservative", "balanced", "aggressive"] as const;
 export const PROJECT_INCLUSIONS = ["most_relevant", "relevant_supporting", "all"] as const;
 export const SKILLS_SCOPES = ["job_only", "relevant_supporting", "full_master"] as const;
-export const PAPER_SIZES = ["letter", "a4"] as const;
+export const PAPER_SIZES = ["a4"] as const;
 
 export type ResumeLength = (typeof RESUME_LENGTHS)[number];
 export type TailoringLevel = (typeof TAILORING_LEVELS)[number];
@@ -32,11 +32,11 @@ export type TailoringSettings = {
 };
 
 export const DEFAULT_TAILORING_SETTINGS: TailoringSettings = {
-  resume_length: "two_page",
+  resume_length: "one_page",
   tailoring_level: "balanced",
   project_inclusion: "relevant_supporting",
   skills_scope: "relevant_supporting",
-  paper_size: "letter",
+  paper_size: "a4",
   include_summary: true,
   include_experience: true,
   include_projects: true,
@@ -69,7 +69,6 @@ export const skillsScopeLabel: Record<SkillsScope, string> = {
 };
 
 export const paperSizeLabel: Record<PaperSize, string> = {
-  letter: "US Letter (8.5 × 11 in)",
   a4: "A4 (210 × 297 mm)",
 };
 
@@ -90,14 +89,9 @@ export const RESUME_LENGTH_OPTIONS: Option<ResumeLength>[] = [
 
 export const PAPER_SIZE_OPTIONS: Option<PaperSize>[] = [
   {
-    value: "letter",
-    label: paperSizeLabel.letter,
-    description: "Standard for US and Canada ATS systems and recruiter printing.",
-  },
-  {
     value: "a4",
     label: paperSizeLabel.a4,
-    description: "Standard for UK, Europe, Australia, and international recruiters.",
+    description: "Standard international page size for recruiters and ATS systems.",
   },
 ];
 
@@ -251,7 +245,7 @@ export function normaliseSettings(input: unknown): TailoringSettings {
 export function settingsSummary(settings: TailoringSettings) {
   return [
     resumeLengthLabel[settings.resume_length],
-    settings.paper_size === "a4" ? "A4" : "Letter",
+    "A4",
     tailoringLevelLabel[settings.tailoring_level],
     `Projects: ${projectInclusionLabel[settings.project_inclusion]}`,
     `Skills: ${skillsScopeLabel[settings.skills_scope]}`,

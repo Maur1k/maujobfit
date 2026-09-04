@@ -159,10 +159,10 @@ export function groupSkills(names: string[]) {
 }
 
 export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
-  const paperSize = input.paperSize ?? "letter";
+  const paperSize = input.paperSize ?? "a4";
   const { width: PAGE_W, height: PAGE_H } = PAGE_DIMENSIONS[paperSize];
-  const MARGIN_X = 52;
-  const MARGIN_Y = 48;
+  const MARGIN_X = 48;
+  const MARGIN_Y = 40;
   const BODY_W = PAGE_W - MARGIN_X * 2;
 
   const renderDoc = (scale = 1.0) => {
@@ -239,22 +239,22 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         doc.text(line, MARGIN_X + indent, y + s(size));
         y += leading;
       });
-      y += s(1.5);
+      y += s(1);
     };
 
     const sectionHeading = (label: string, keepWith = 34) => {
-      if (y > MARGIN_Y + 2) y += s(8);
+      if (y > MARGIN_Y + 2) y += s(6);
       ensure(s(20 + keepWith));
       if (y <= MARGIN_Y + 2) y = MARGIN_Y;
       setFont(9.6, "bold");
       doc.setCharSpace(1.1);
       doc.text(label.toUpperCase(), MARGIN_X, y + s(9.6));
       doc.setCharSpace(0);
-      y += s(14);
+      y += s(13);
       doc.setDrawColor(RULE[0], RULE[1], RULE[2]);
       doc.setLineWidth(0.7);
       doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
-      y += s(9);
+      y += s(6.5);
     };
 
     const rightText = (
@@ -274,7 +274,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     ensure(s(28));
     doc.text(name, MARGIN_X, y + s(21));
     doc.setCharSpace(0);
-    y += s(27);
+    y += s(24);
 
     const rawTarget = (input.jobTitle ?? "").trim();
     const target = (
@@ -285,7 +285,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       doc.setCharSpace(1.4);
       doc.text(target.toUpperCase(), MARGIN_X, y + s(10.5));
       doc.setCharSpace(0);
-      y += s(17);
+      y += s(15);
     }
 
     const contactPrimary = [
@@ -307,15 +307,15 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
 
     for (const line of [contactPrimary, contactSecondary]) {
       if (line.length === 0) continue;
-      block(line.join("   ·   "), { size: 9, color: MUTED, leading: 12.5 });
+      block(line.join("   ·   "), { size: 9, color: MUTED, leading: 11.6 });
     }
 
-    y += s(6);
+    y += s(4);
     doc.setDrawColor(INK[0], INK[1], INK[2]);
     doc.setLineWidth(1);
     doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
     doc.setLineWidth(0.7);
-    y += s(14);
+    y += s(10);
 
     const bySection = (section: string) => input.items.filter((item) => item.section === section);
 
@@ -323,7 +323,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     const summaryItems = bySection("summary");
     if (summaryItems.length) {
       sectionHeading("Professional Summary", 26);
-      block(summaryItems.map((item) => item.statement.trim()).join(" "), { leading: 13.2, gap: 8 });
+      block(summaryItems.map((item) => item.statement.trim()).join(" "), { leading: 12.8, gap: 4 });
     }
 
     // ---------- Experience & Projects ----------
@@ -368,7 +368,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         const needed = s(
           headingLines.length * 14.5 + (subtitle ? 12 : 0) + (stack.length ? 12 : 0) + 30,
         );
-        if (groupIndex > 0) y += s(6);
+        if (groupIndex > 0) y += s(4.5);
         ensure(needed);
 
         setFont(11, "bold");
@@ -387,7 +387,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
 
         for (const item of groupItems) bullet(item.statement.trim());
       });
-      y += s(6);
+      y += s(3);
     };
 
     renderGrouped("experience", "Experience");
@@ -401,7 +401,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       for (const group of grouped) {
         const labelText = `${group.label}: `;
         setFont(9.5, "bold");
-        const labelWidth = doc.getTextWidth(labelText);
+        const labelWidth = doc.getTextWidth(labelText) + s(2);
         const lines = wrap(group.skills.join(", "), 9.5, "normal", BODY_W - labelWidth);
         const leading = s(13);
         ensure(leading * Math.min(lines.length, 2));
@@ -415,7 +415,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           doc.text(line, MARGIN_X + labelWidth, y + s(9.5));
           y += leading;
         });
-        y += s(1.5);
+        y += s(0.5);
       }
     }
 
@@ -432,12 +432,11 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           doc.text(heading, MARGIN_X, y + s(10.5));
           y += s(14);
         }
-        block(item.statement.trim(), { size: 9.5, color: MUTED, leading: 12.5, gap: 4 });
+        block(item.statement.trim(), { size: 9.5, color: MUTED, leading: 12.2, gap: 2 });
       }
-      y += s(4);
+      y += s(2);
     };
 
-    y += s(4);
     renderSimple("education", "Education");
     renderSimple("certification", "Certifications");
 
@@ -448,7 +447,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
 
   // If onePage is requested, automatically micro-scale down if content overflowed onto page 2
   if (input.onePage && doc.getNumberOfPages() > 1) {
-    const scaleSteps = [0.96, 0.92, 0.88, 0.84];
+    const scaleSteps = [0.97, 0.94, 0.91, 0.88, 0.85, 0.82];
     for (const step of scaleSteps) {
       const scaledDoc = renderDoc(step);
       if (scaledDoc.getNumberOfPages() === 1) {

@@ -9,7 +9,6 @@ import { saveTailoringSettings } from "@/lib/composition.functions";
 import {
   DEFAULT_TAILORING_SETTINGS,
   normaliseSettings,
-  PAPER_SIZE_OPTIONS,
   PROJECT_INCLUSION_OPTIONS,
   RESUME_LENGTH_OPTIONS,
   SECTION_TOGGLES,
@@ -162,16 +161,6 @@ export function TailoringSettingsCard({
                 value={draft.resume_length}
                 onChange={(value) =>
                   setDraft({ ...draft, resume_length: value as TailoringSettings["resume_length"] })
-                }
-              />
-              <ChoiceGroup
-                id="paper-size"
-                title="Paper size"
-                hint="Target document page dimensions for export."
-                options={PAPER_SIZE_OPTIONS}
-                value={draft.paper_size}
-                onChange={(value) =>
-                  setDraft({ ...draft, paper_size: value as TailoringSettings["paper_size"] })
                 }
               />
               <ChoiceGroup
