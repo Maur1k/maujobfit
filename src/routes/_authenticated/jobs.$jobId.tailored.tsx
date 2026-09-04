@@ -742,6 +742,11 @@ function TailoredResumePage() {
 
               <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
                 <Button asChild variant="secondary" size="sm">
+                  <Link to="/jobs/$jobId/apply" params={{ jobId }}>
+                    Application package
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="sm">
                   <Link to="/jobs/$jobId/ats" params={{ jobId }}>
                     ATS &amp; readability check
                   </Link>

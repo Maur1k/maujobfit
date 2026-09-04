@@ -23,8 +23,9 @@ export type BuildCoverLetterPdfInput = {
   paperSize?: "a4" | "letter";
 };
 
-const INK: [number, number, number] = [22, 22, 26];
-const MUTED: [number, number, number] = [102, 102, 110];
+// All rendered text is pure black for maximum print/ATS contrast.
+const INK: [number, number, number] = [0, 0, 0];
+const MUTED: [number, number, number] = [0, 0, 0];
 
 export function buildCoverLetterPdf(input: BuildCoverLetterPdfInput) {
   const paperSize = input.paperSize ?? "a4";

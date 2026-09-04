@@ -208,6 +208,85 @@ export type Database = {
           },
         ]
       }
+      job_applications: {
+        Row: {
+          applied_at: string
+          channel: string
+          company: string | null
+          cover_letter_id: string | null
+          created_at: string
+          id: string
+          job_id: string | null
+          job_title: string
+          notes: string | null
+          package_file_name: string | null
+          sent_to: string | null
+          status: string
+          tailored_resume_id: string | null
+          tailored_resume_version: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          channel?: string
+          company?: string | null
+          cover_letter_id?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          job_title: string
+          notes?: string | null
+          package_file_name?: string | null
+          sent_to?: string | null
+          status?: string
+          tailored_resume_id?: string | null
+          tailored_resume_version?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          channel?: string
+          company?: string | null
+          cover_letter_id?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          job_title?: string
+          notes?: string | null
+          package_file_name?: string | null
+          sent_to?: string | null
+          status?: string
+          tailored_resume_id?: string | null
+          tailored_resume_version?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_cover_letter_id_fkey"
+            columns: ["cover_letter_id"]
+            isOneToOne: false
+            referencedRelation: "cover_letters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_tailored_resume_id_fkey"
+            columns: ["tailored_resume_id"]
+            isOneToOne: false
+            referencedRelation: "tailored_resumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_content_priorities: {
         Row: {
           created_at: string

@@ -218,6 +218,11 @@ function MatchReport() {
               </Link>
             </Button>
             <Button variant="outline" asChild>
+              <Link to="/jobs/$jobId/apply" params={{ jobId }}>
+                Application package
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link to="/jobs/$jobId/preview" params={{ jobId }}>
                 Draft preview
               </Link>

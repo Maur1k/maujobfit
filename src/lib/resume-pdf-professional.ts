@@ -55,8 +55,9 @@ export const PAGE_DIMENSIONS = {
   letter: { width: 612, height: 792 },
 } as const;
 
-const INK: [number, number, number] = [22, 22, 26];
-const MUTED: [number, number, number] = [102, 102, 110];
+// All rendered text is pure black for maximum print/ATS contrast.
+const INK: [number, number, number] = [0, 0, 0];
+const MUTED: [number, number, number] = [0, 0, 0];
 const RULE: [number, number, number] = [176, 176, 184];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
