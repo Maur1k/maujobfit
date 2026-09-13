@@ -64,13 +64,13 @@ import { buildProfessionalResumePdf, type ProEvidence } from "@/lib/resume-pdf-p
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/tailored")({
   head: () => ({
     meta: [
-      { title: "Tailored Resume — MauJobFit" },
+      { title: "Tailored Resume — JobFit" },
       {
         name: "description",
         content:
           "Review an evidence-backed tailored resume: every generated line cites the master resume evidence it came from, pending validation.",
       },
-      { property: "og:title", content: "Tailored Resume — MauJobFit" },
+      { property: "og:title", content: "Tailored Resume — JobFit" },
       {
         property: "og:description",
         content: "A tailored resume generated only from your own approved master resume evidence.",

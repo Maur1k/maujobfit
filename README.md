@@ -1,16 +1,16 @@
-# MauJobFit
+# JobFit
 
-**MauJobFit** is an evidence-driven AI resume tailoring platform designed to present the strongest, most relevant version of your real career experience for any target role — without hallucinating or inventing qualifications.
+**JobFit** is an evidence-driven AI resume tailoring platform designed to present the strongest, most relevant version of your real career experience for any target role — without hallucinating or inventing qualifications.
 
 > **Core Principle**: *"Make the user's existing resume present the strongest version of their real experience for a specific job, without inventing qualifications."*
 
 ---
 
-## 🎯 What Makes MauJobFit Different?
+## 🎯 What Makes JobFit Different?
 
 Most AI resume tools take a job description and freely rewrite your history with generic buzzwords, often inventing skills, metrics, and experiences. 
 
-MauJobFit is built **evidence-first**:
+JobFit is built **evidence-first**:
 - **Master Resume is the Source of Truth**: You maintain one comprehensive, canonical career record. Job analysis and resume tailoring *never* mutate, overwrite, or delete your Master Resume data.
 - **Atomic Evidence Provenance**: Work bullets, projects, skills, and education are stored as citable atomic evidence records with stable IDs. Every generated claim links directly to the real evidence supporting it.
 - **4-Tier Requirement Matching**: Evaluates every requirement in a job description against your actual evidence:

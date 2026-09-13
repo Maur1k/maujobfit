@@ -17,13 +17,13 @@ import { Progress } from "@/components/ui/progress";
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/ats")({
   head: () => ({
     meta: [
-      { title: "ATS & Readability Check — MauJobFit" },
+      { title: "ATS & Readability Check — JobFit" },
       {
         name: "description",
         content:
           "Score your supported-only tailored resume against the saved job description: keyword coverage, requirement coverage, readability and grounded suggested edits.",
       },
-      { property: "og:title", content: "ATS & Readability Check — MauJobFit" },
+      { property: "og:title", content: "ATS & Readability Check — JobFit" },
       {
         property: "og:description",
         content: "Transparent ATS scoring with suggestions grounded only in your own stored evidence.",

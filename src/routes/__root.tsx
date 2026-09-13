@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MauJobFit — Evidence-Backed Resume Tailoring" },
+      { title: "JobFit — Evidence-Backed Job Applications" },
       {
         name: "description",
         content:
           "Build a master resume of atomic evidence and tailor it to any job, with every statement traceable to a source record.",
       },
-      { property: "og:title", content: "MauJobFit" },
+      { property: "og:title", content: "JobFit" },
       {
         property: "og:description",
         content: "Every tailored statement is backed by source evidence.",
@@ -103,7 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],

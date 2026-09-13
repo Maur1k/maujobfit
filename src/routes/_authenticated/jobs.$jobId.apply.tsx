@@ -63,13 +63,13 @@ import {
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/apply")({
   head: () => ({
     meta: [
-      { title: "Job Application Package — MauJobFit" },
+      { title: "Job Application Package — JobFit" },
       {
         name: "description",
         content:
           "Generate the tailored resume and evidence-backed cover letter for one job, download them as a single application PDF, and log where and when you sent it.",
       },
-      { property: "og:title", content: "Job Application Package — MauJobFit" },
+      { property: "og:title", content: "Job Application Package — JobFit" },
       {
         property: "og:description",
         content:

@@ -29,13 +29,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/match")({
   head: () => ({
     meta: [
-      { title: "Match Report — MauJobFit" },
+      { title: "Match Report — JobFit" },
       {
         name: "description",
         content:
           "An explainable match report: every job requirement marked exact, related, listed only, or missing, with the resume evidence that supports it.",
       },
-      { property: "og:title", content: "Match Report — MauJobFit" },
+      { property: "og:title", content: "Match Report — JobFit" },
       {
         property: "og:description",
         content: "Requirement-by-requirement match between a job posting and your master resume evidence.",

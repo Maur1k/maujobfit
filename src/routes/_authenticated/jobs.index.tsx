@@ -34,13 +34,13 @@ import {
 export const Route = createFileRoute("/_authenticated/jobs/")({
   head: () => ({
     meta: [
-      { title: "Job Descriptions — MauJobFit" },
+      { title: "Job Descriptions — JobFit" },
       {
         name: "description",
         content:
-          "Paste a job posting and MauJobFit structures it into required skills, preferred skills, responsibilities and keywords.",
+          "Paste a job posting and JobFit structures it into required skills, preferred skills, responsibilities and keywords.",
       },
-      { property: "og:title", content: "Job Descriptions — MauJobFit" },
+      { property: "og:title", content: "Job Descriptions — JobFit" },
       {
         property: "og:description",
         content: "Turn a pasted job posting into a structured, normalized requirements record.",
@@ -151,7 +151,7 @@ function JobsPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold">Job descriptions</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Paste a posting from JobStreet, LinkedIn or anywhere else. MauJobFit stores the original
+          Paste a posting from JobStreet, LinkedIn or anywhere else. JobFit stores the original
           text and structures it into normalized requirements — nothing about your Master Resume
           changes here.
         </p>

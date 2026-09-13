@@ -23,13 +23,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — MauJobFit" },
+      { title: "Dashboard — JobFit" },
       {
         name: "description",
         content:
           "See your master resume status, evidence coverage and recent tailoring activity in one place.",
       },
-      { property: "og:title", content: "Dashboard — MauJobFit" },
+      { property: "og:title", content: "Dashboard — JobFit" },
       {
         property: "og:description",
         content: "Master resume status and recent tailoring activity.",
