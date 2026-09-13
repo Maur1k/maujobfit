@@ -103,7 +103,7 @@ function Landing() {
       </header>
 
       <main>
-        <section className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20 lg:py-20">
+        <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 lg:min-h-[min(860px,calc(100vh-8rem))] lg:grid-cols-[0.92fr_1.08fr] lg:gap-20 lg:py-20">
           <div className="animate-rise space-y-8">
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
               <ShieldCheck className="size-4" aria-hidden />
