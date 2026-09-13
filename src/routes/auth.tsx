@@ -15,13 +15,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — MauJobFit" },
+      { title: "Sign in — JobFit" },
       {
         name: "description",
         content:
           "Sign in or create an account to build an evidence-backed master resume and tailor it to any job.",
       },
-      { property: "og:title", content: "Sign in — MauJobFit" },
+      { property: "og:title", content: "Sign in — JobFit" },
       {
         property: "og:description",
         content: "Access your evidence-backed resume workspace.",
@@ -88,7 +88,7 @@ function AuthPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between border-r border-border bg-primary p-10 text-primary-foreground lg:flex">
         <Link to="/" className="font-display text-lg font-semibold">
-          Mau<span className="text-evidence">·</span>JobFit
+          JobFit<span className="text-evidence">.</span>
         </Link>
         <div className="space-y-6">
           <h1 className="max-w-md font-display text-4xl font-semibold leading-tight">
@@ -103,7 +103,7 @@ function AuthPage() {
             No invented experience. Ever.
           </div>
         </div>
-        <p className="text-xs text-primary-foreground/50">Phase 1 — foundations</p>
+        <p className="text-xs text-primary-foreground/50">Developed with Lovable</p>
       </div>
 
       <div className="flex items-center justify-center p-6">
