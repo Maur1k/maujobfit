@@ -154,11 +154,11 @@ function Landing() {
               <div className="grid gap-4 py-5 sm:grid-cols-[0.8fr_1.2fr]">
                 <div className="space-y-2">
                   {[
-                    [FileStack, "Career history", "Complete"],
-                    [ScanSearch, "Job match", "Strong"],
-                    [FileCheck2, "Tailored resume", "Checked"],
-                    [ClipboardCheck, "Application", "Ready"],
-                  ].map(([Icon, label, status], index) => (
+                    { icon: FileStack, label: "Career history", status: "Complete" },
+                    { icon: ScanSearch, label: "Job match", status: "Strong" },
+                    { icon: FileCheck2, label: "Tailored resume", status: "Checked" },
+                    { icon: ClipboardCheck, label: "Application", status: "Ready" },
+                  ].map(({ icon: Icon, label, status }, index) => (
                     <div
                       key={String(label)}
                       className={`flex items-center gap-3 rounded-md border px-3 py-3 ${
