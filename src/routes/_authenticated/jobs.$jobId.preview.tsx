@@ -25,13 +25,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/preview")({
   head: () => ({
     meta: [
-      { title: "Tailored Draft Preview — MauJobFit" },
+      { title: "Tailored Draft Preview — JobFit" },
       {
         name: "description",
         content:
           "Preview a freshly generated tailored resume draft before editing or validating it, with the per-job skill relevance view.",
       },
-      { property: "og:title", content: "Tailored Draft Preview — MauJobFit" },
+      { property: "og:title", content: "Tailored Draft Preview — JobFit" },
       {
         property: "og:description",
         content: "The first look at a generated tailored resume draft, straight after tailoring.",

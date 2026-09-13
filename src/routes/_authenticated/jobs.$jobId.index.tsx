@@ -24,13 +24,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/")({
   head: () => ({
     meta: [
-      { title: "Job Analysis — MauJobFit" },
+      { title: "Job Analysis — JobFit" },
       {
         name: "description",
         content:
           "Structured requirements for an analyzed job posting: required skills, preferred skills, responsibilities and keywords.",
       },
-      { property: "og:title", content: "Job Analysis — MauJobFit" },
+      { property: "og:title", content: "Job Analysis — JobFit" },
       {
         property: "og:description",
         content: "Normalized requirements extracted from a pasted job posting.",

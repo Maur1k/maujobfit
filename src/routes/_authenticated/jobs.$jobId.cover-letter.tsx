@@ -31,13 +31,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/cover-letter")({
   head: () => ({
     meta: [
-      { title: "Evidence-Backed Cover Letter — MauJobFit" },
+      { title: "Evidence-Backed Cover Letter — JobFit" },
       {
         name: "description",
         content:
           "Draft a concise cover letter from your supported resume claims only, review and edit it, revalidate against stored evidence, then export a clean application-ready PDF.",
       },
-      { property: "og:title", content: "Evidence-Backed Cover Letter — MauJobFit" },
+      { property: "og:title", content: "Evidence-Backed Cover Letter — JobFit" },
       {
         property: "og:description",
         content:

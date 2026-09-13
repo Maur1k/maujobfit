@@ -15,13 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/versions")({
   head: () => ({
     meta: [
-      { title: "Resume Version History — MauJobFit" },
+      { title: "Resume Version History — JobFit" },
       {
         name: "description",
         content:
           "Append-only snapshots of your tailored resume with a word-level diff between any two versions, including edits, accepted rewrites and exports.",
       },
-      { property: "og:title", content: "Resume Version History — MauJobFit" },
+      { property: "og:title", content: "Resume Version History — JobFit" },
       {
         property: "og:description",
         content: "Compare any two tailored-resume snapshots line by line, with timestamps and export associations.",

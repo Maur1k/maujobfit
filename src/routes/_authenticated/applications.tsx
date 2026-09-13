@@ -30,13 +30,13 @@ import {
 export const Route = createFileRoute("/_authenticated/applications")({
   head: () => ({
     meta: [
-      { title: "Applications Tracker — MauJobFit" },
+      { title: "Applications Tracker — JobFit" },
       {
         name: "description",
         content:
           "Track every job application: which tailored resume version you sent, to whom, through which channel, on what date, and where it stands now.",
       },
-      { property: "og:title", content: "Applications Tracker — MauJobFit" },
+      { property: "og:title", content: "Applications Tracker — JobFit" },
       {
         property: "og:description",
         content:

@@ -51,13 +51,13 @@ import {
 export const Route = createFileRoute("/_authenticated/import")({
   head: () => ({
     meta: [
-      { title: "Import Resume PDF — MauJobFit" },
+      { title: "Import Resume PDF — JobFit" },
       {
         name: "description",
         content:
           "Upload a resume PDF, review every extracted entry and bullet, then merge only what you approve into your Master Resume.",
       },
-      { property: "og:title", content: "Import Resume PDF — MauJobFit" },
+      { property: "og:title", content: "Import Resume PDF — JobFit" },
       {
         property: "og:description",
         content: "Review extracted resume content before anything reaches your Master Resume.",
@@ -385,7 +385,7 @@ function ImportPage() {
       <div className="space-y-2">
         <h1 className="font-display text-3xl font-semibold">Import a resume PDF</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          MauJobFit reads your PDF and drafts structured entries for review. Nothing is written to
+          JobFit reads your PDF and drafts structured entries for review. Nothing is written to
           your Master Resume until you accept it here.
         </p>
       </div>
