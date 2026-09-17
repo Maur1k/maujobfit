@@ -14,6 +14,7 @@ import {
   type JobRow,
 } from "@/lib/job-analysis";
 import { Button } from "@/components/ui/button";
+import { QuickResumeButton } from "@/components/jobs/QuickResumeButton";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -283,7 +284,10 @@ function JobsPage() {
                         </Link>
                       </Button>
                     )}
-                    <Button asChild size="sm" variant="default">
+                    {job.analysis_status === "ready" ? (
+                      <QuickResumeButton jobId={job.id} size="sm" showWordLink={false} />
+                    ) : null}
+                    <Button asChild size="sm" variant="outline">
                       <Link to="/jobs/$jobId/apply" params={{ jobId: job.id }}>
                         <SendHorizontal className="size-4" aria-hidden />
                         Apply

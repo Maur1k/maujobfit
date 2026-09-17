@@ -150,18 +150,12 @@ function ApplyPage() {
       };
       if (!resume) return base;
 
-      const [items, sources, letters] = await Promise.all([
+      const [items, letters] = await Promise.all([
         supabase
           .from("tailored_resume_items")
           .select(TAILORED_ITEM_COLUMNS)
           .eq("tailored_resume_id", resume.id)
           .order("sort_order", { ascending: true }),
-        supabase
-          .from("tailored_resume_item_sources")
-          .select(
-            "id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt",
-          )
-          .eq("user_id", user!.id),
         supabase
           .from("cover_letters")
           .select("*")
@@ -170,13 +164,21 @@ function ApplyPage() {
           .limit(1),
       ]);
       if (items.error) throw new Error(items.error.message);
-      if (sources.error) throw new Error(sources.error.message);
       if (letters.error) throw new Error(letters.error.message);
 
-      const itemIds = new Set((items.data ?? []).map((row) => row.id));
-      const scopedSources = ((sources.data ?? []) as TailoredSourceRow[]).filter((row) =>
-        itemIds.has(row.tailored_resume_item_id),
-      );
+      // Scope citations to this draft's items: fetching every citation the account owns
+      // can exceed the API row cap once several versions exist.
+      const itemIdList = (items.data ?? []).map((row) => row.id);
+      const sources = itemIdList.length
+        ? await supabase
+            .from("tailored_resume_item_sources")
+            .select(
+              "id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt",
+            )
+            .in("tailored_resume_item_id", itemIdList)
+        : { data: [], error: null };
+      if (sources.error) throw new Error(sources.error.message);
+      const scopedSources = (sources.data ?? []) as TailoredSourceRow[];
       const evidenceIds = [...new Set(scopedSources.map((row) => row.resume_evidence_id))];
       const evidence = evidenceIds.length
         ? await supabase

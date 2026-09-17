@@ -43,10 +43,13 @@ export async function captureSnapshot(
   if (itemsError) throw new Error(itemsError.message);
   const items = itemRows ?? [];
 
-  const { data: sourceRows, error: sourcesError } = await supabase
-    .from("tailored_resume_item_sources")
-    .select("tailored_resume_item_id, resume_evidence_id, support_type")
-    .eq("user_id", userId);
+  const itemIds = items.map((item: any) => item.id);
+  const { data: sourceRows, error: sourcesError } = itemIds.length
+    ? await supabase
+        .from("tailored_resume_item_sources")
+        .select("tailored_resume_item_id, resume_evidence_id, support_type")
+        .in("tailored_resume_item_id", itemIds)
+    : { data: [], error: null };
   if (sourcesError) throw new Error(sourcesError.message);
 
   const byItem = new Map<string, string[]>();

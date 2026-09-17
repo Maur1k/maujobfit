@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Pencil, RefreshCcw, ScanSearch, SendHorizontal, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ExternalLink, Loader2, Pencil, RefreshCcw, SendHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdvancedJobTools, QuickResumeButton } from "@/components/jobs/QuickResumeButton";
 
 export const Route = createFileRoute("/_authenticated/jobs/$jobId/")({
   head: () => ({
@@ -261,13 +262,8 @@ function JobDetail() {
             >
               {analysisStatusLabel(job.analysis_status)}
             </Badge>
-            <Button asChild size="sm">
-              <Link to="/jobs/$jobId/match" params={{ jobId: job.id }}>
-                <ScanSearch className="size-4" aria-hidden />
-                Match report
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="default">
+            <QuickResumeButton jobId={job.id} size="sm" />
+            <Button asChild size="sm" variant="outline">
               <Link to="/jobs/$jobId/apply" params={{ jobId: job.id }}>
                 <SendHorizontal className="size-4" aria-hidden />
                 Apply
@@ -295,6 +291,8 @@ function JobDetail() {
           </a>
         ) : null}
       </div>
+
+      <AdvancedJobTools jobId={job.id} />
 
       {job.analysis_status === "failed" && job.error_message ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
