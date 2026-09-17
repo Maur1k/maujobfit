@@ -238,7 +238,15 @@ const SKILL_GROUPS: { label: string; match: RegExp }[] = [
 const ADDITIONAL_TOOLS_RE =
   /git|github|gitlab|cPanel|codemagic|paymongo|vercel|netlify|postman|insomnia|docker|kubernetes|aws|azure|gcp|jira|figma|sketch|jenkins|circleci|travis|webpack|vite|rollup|wordpress|shopify|webflow|contentful|strapi|ci\/cd|tools?/i;
 
-export function groupSkills(names: string[]) {
+export type SkillInput = string | { name: string; group?: string | null };
+
+/**
+ * Groups skills for the Technical Skills section. When a skill arrives with the
+ * user's own Master Resume group title, that grouping wins (first-seen order, so
+ * job-relevant groups and skills lead). Skills without a group fall back to the
+ * regex buckets below. Group names and skills are de-duplicated case-insensitively.
+ */
+export function groupSkills(names: SkillInput[]) {
   const explicit = new Map<string, string[]>();
   const explicitOrder: string[] = [];
   const inferred = new Map<string, string[]>();
@@ -246,12 +254,37 @@ export function groupSkills(names: string[]) {
 
   const push = (map: Map<string, string[]>, label: string, values: string[]) => {
     const list = map.get(label) ?? [];
-    for (const value of values) if (value && !list.includes(value)) list.push(value);
+    for (const value of values) {
+      if (!value) continue;
+      if (!list.some((existing) => existing.toLowerCase() === value.toLowerCase())) list.push(value);
+    }
     map.set(label, list);
   };
 
-  for (const raw of names) {
-    const name = raw.trim();
+  const explicitKeys = new Map<string, string>();
+  const pushExplicit = (label: string, values: string[]) => {
+    const key = label.toLowerCase();
+    const canonical = explicitKeys.get(key);
+    if (canonical) {
+      push(explicit, canonical, values);
+      return;
+    }
+    explicitKeys.set(key, label);
+    explicitOrder.push(label);
+    push(explicit, label, values);
+  };
+
+  for (const entry of names) {
+    const raw = typeof entry === "string" ? entry : entry.name;
+    const name = (raw ?? "").trim();
+    if (!name) continue;
+
+    const ownGroup = typeof entry === "string" ? "" : (entry.group ?? "").trim();
+    if (ownGroup) {
+      // A skill whose name repeats its own group heading adds nothing to the line.
+      if (ownGroup.toLowerCase() !== name.toLowerCase()) pushExplicit(ownGroup, [name]);
+      continue;
+    }
     // "Databases (MySQL, PostgreSQL)" → an author-provided category with members
     const labelled = /^([^()]{2,40}?)\s*\(([^()]+)\)$/.exec(name);
     if (labelled) {
