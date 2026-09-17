@@ -92,7 +92,14 @@ export async function buildResumeInOneStep({
   const validated = await validateTailoredResume({ data: { tailoredResumeId } });
   if (!validated.ok) throw new Error(validated.error);
 
+  // Repair pass: rather than silently dropping every flagged line, ask the existing
+  // rewrite step to restate it using only the wording of its own cited records, then
+  // save it (which re-checks that single line). Nothing is invented, and lines that
+  // cannot be defended from the evidence are left untouched.
+  const repairedCount = await repairFlaggedItems(tailoredResumeId, onStep);
+
   onStep?.("rendering");
+
   const [jobResult, profileResult, resumeResult, itemsResult, validationsResult] = await Promise.all([
     supabase.from("jobs").select("id, title, company").eq("id", jobId).maybeSingle(),
     supabase
