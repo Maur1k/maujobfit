@@ -6,8 +6,6 @@ import {
   LevelFormat,
   Packer,
   Paragraph,
-  TabStopType,
-  TabStopPosition,
   TextRun,
 } from "docx";
 
