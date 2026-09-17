@@ -282,6 +282,7 @@ export function prioritiseCandidates(
     label: row.label,
     text: row.text,
     skills: row.skills,
+    skillGroup: row.skillGroup ?? null,
     resumeItemId: row.resumeItemId,
     resumeEvidenceId: row.resumeEvidenceId,
     evidenceIds: row.evidenceIds,
