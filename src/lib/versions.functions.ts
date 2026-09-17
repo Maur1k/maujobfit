@@ -48,7 +48,7 @@ export async function captureSnapshot(
     ? await supabase
         .from("tailored_resume_item_sources")
         .select("tailored_resume_item_id, resume_evidence_id, support_type")
-        .in("id" === "id" ? "tailored_resume_item_id" : "tailored_resume_item_id", itemIds)
+        .in("tailored_resume_item_id", itemIds)
     : { data: [], error: null };
   if (sourcesError) throw new Error(sourcesError.message);
 
