@@ -16,8 +16,10 @@ import {
 const stepLabel: Record<Exclude<QuickResumeStep, "idle" | "done">, string> = {
   generating: "Building your resume…",
   validating: "Checking your claims…",
+  repairing: "Tightening flagged lines…",
   rendering: "Preparing your file…",
 };
+
 
 /**
  * Single-action resume download: builds, checks and downloads in one press.
