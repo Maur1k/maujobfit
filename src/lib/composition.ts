@@ -130,6 +130,8 @@ export type CandidateInput = {
   label: string;
   text: string;
   skills: string[];
+  /** For skill candidates: the user's own Master Resume skill-group title, if any. */
+  skillGroup?: string | null;
   resumeItemId: string | null;
   resumeEvidenceId: string | null;
   evidenceIds: string[];

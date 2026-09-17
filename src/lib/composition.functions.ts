@@ -228,6 +228,7 @@ export async function loadJobComposition(
     itemIds: Set<string>;
     evidenceIds: Set<string>;
     text: string[];
+    group?: string | null;
   };
   const skillEntries = new Map<string, SkillEntry>();
   const skillEntryFor = (label: string) => {
@@ -240,11 +241,22 @@ export async function loadJobComposition(
     return created;
   };
 
+  // The user's own skill-group titles ("Languages", "Tools", ...) so a tailored
+  // resume can keep their grouping instead of re-bucketing loose skill names.
+  const groupTitles = new Set<string>();
+  for (const item of items) {
+    if (item.section !== "skill") continue;
+    const title = (item.title ?? "").trim();
+    if (title) groupTitles.add(title.toLowerCase());
+  }
+  const isGroupTitle = (label: string) => groupTitles.has(label.trim().toLowerCase());
+
   for (const item of items) {
     for (const skill of item.skills ?? []) {
-      if (!skill.trim()) continue;
+      if (!skill.trim() || isGroupTitle(skill)) continue;
       const entry = skillEntryFor(skill);
       entry.itemIds.add(item.id);
+      if (item.section === "skill" && !entry.group) entry.group = (item.title ?? "").trim() || null;
       // Link the item's evidence record if one exists
       const itemEvidence = evidence.find((e) => e.resume_item_id === item.id);
       if (itemEvidence) entry.evidenceIds.add(itemEvidence.id);
@@ -253,9 +265,10 @@ export async function loadJobComposition(
   }
   for (const row of evidence) {
     for (const skill of row.skills ?? []) {
-      if (!skill.trim()) continue;
+      if (!skill.trim() || isGroupTitle(skill)) continue;
       const entry = skillEntryFor(skill);
       entry.evidenceIds.add(row.id);
+      if (row.category === "skill" && !entry.group) entry.group = (row.title ?? "").trim() || null;
       if (row.category !== "skill") entry.text.push(row.content);
     }
   }
@@ -269,6 +282,7 @@ export async function loadJobComposition(
       label: entry.label,
       text: entry.text.join(" ").slice(0, 2000),
       skills: [entry.label],
+      skillGroup: entry.group ?? null,
       resumeItemId: [...entry.itemIds][0] ?? null,
       resumeEvidenceId: ids[0] ?? null,
       evidenceIds: ids,
