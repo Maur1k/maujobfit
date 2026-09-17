@@ -164,6 +164,13 @@ export async function buildResumeInOneStep({
     );
   }
 
+  // Any section that had lines but ends up with none is reported, never dropped quietly.
+  const printableSections = new Set(supportedItems.map((item) => item.section));
+  const droppedSections = [...new Set(items.map((item) => item.section))]
+    .filter((section) => !printableSections.has(section))
+    .map((section) => tailoredSectionLabel[section] ?? section);
+
+
   const evidenceIds = [...new Set(sources.map((row) => row.resume_evidence_id))];
   const evidenceResult = evidenceIds.length
     ? await supabase
