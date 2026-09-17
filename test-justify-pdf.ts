@@ -112,8 +112,7 @@ const input = {
 };
 
 const { blob, fileName } = buildProfessionalResumePdf(input as any);
-const b = await (blob as any)();
-const arrayBuffer = await b.arrayBuffer();
+const arrayBuffer = await (blob as Blob).arrayBuffer();
 const buffer = Buffer.from(arrayBuffer);
 const path = "/tmp/test-justify-resume.pdf";
 await writeFile(path, buffer);
