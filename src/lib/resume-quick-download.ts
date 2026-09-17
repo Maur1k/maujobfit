@@ -79,31 +79,26 @@ export async function buildResumeInOneStep({
   if (!validated.ok) throw new Error(validated.error);
 
   onStep?.("rendering");
-  const [jobResult, profileResult, resumeResult, itemsResult, sourcesResult, validationsResult] =
-    await Promise.all([
-      supabase.from("jobs").select("id, title, company").eq("id", jobId).maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url")
-        .eq("id", userId)
-        .maybeSingle(),
-      supabase.from("tailored_resumes").select(TAILORED_RESUME_COLUMNS).eq("id", tailoredResumeId).maybeSingle(),
-      supabase
-        .from("tailored_resume_items")
-        .select(TAILORED_ITEM_COLUMNS)
-        .eq("tailored_resume_id", tailoredResumeId)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("tailored_resume_item_sources")
-        .select("id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt")
-        .eq("user_id", userId),
-      supabase
-        .from("validation_results")
-        .select("tailored_resume_item_id, status")
-        .eq("tailored_resume_id", tailoredResumeId),
-    ]);
+  const [jobResult, profileResult, resumeResult, itemsResult, validationsResult] = await Promise.all([
+    supabase.from("jobs").select("id, title, company").eq("id", jobId).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("full_name, headline, email, phone, location, portfolio_url, github_url, linkedin_url")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase.from("tailored_resumes").select(TAILORED_RESUME_COLUMNS).eq("id", tailoredResumeId).maybeSingle(),
+    supabase
+      .from("tailored_resume_items")
+      .select(TAILORED_ITEM_COLUMNS)
+      .eq("tailored_resume_id", tailoredResumeId)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("validation_results")
+      .select("tailored_resume_item_id, status")
+      .eq("tailored_resume_id", tailoredResumeId),
+  ]);
 
-  for (const result of [jobResult, profileResult, resumeResult, itemsResult, sourcesResult, validationsResult]) {
+  for (const result of [jobResult, profileResult, resumeResult, itemsResult, validationsResult]) {
     if (result.error) throw new Error(result.error.message);
   }
 
@@ -112,10 +107,17 @@ export async function buildResumeInOneStep({
   if (!job || !resume) throw new Error("The generated resume could not be loaded. Please retry.");
 
   const items = (itemsResult.data ?? []) as TailoredItemRow[];
-  const itemIds = new Set(items.map((item) => item.id));
-  const sources = ((sourcesResult.data ?? []) as TailoredSourceRow[]).filter((row) =>
-    itemIds.has(row.tailored_resume_item_id),
-  );
+  // Scope citations to this draft's items: fetching every citation the account owns
+  // can exceed the API row cap once several versions exist, silently dropping sources.
+  const itemIds = items.map((item) => item.id);
+  const sourcesResult = itemIds.length
+    ? await supabase
+        .from("tailored_resume_item_sources")
+        .select("id, tailored_resume_item_id, resume_evidence_id, support_type, confidence, excerpt")
+        .in("tailored_resume_item_id", itemIds)
+    : { data: [], error: null };
+  if (sourcesResult.error) throw new Error(sourcesResult.error.message);
+  const sources = (sourcesResult.data ?? []) as TailoredSourceRow[];
 
   const statusByItem = new Map<string, string>();
   for (const row of (validationsResult.data ?? []) as {
