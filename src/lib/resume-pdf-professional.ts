@@ -602,7 +602,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         if (degreeLine) block(degreeLine, { size: 10.5, style: "bold", leading: 13.6 });
         if (group.institution) block(group.institution, { size: 9.4, color: MUTED, leading: 12.2 });
         for (const major of group.majors) {
-          block(major, { size: 9.5, leading: 12.2 });
+          block(major, { size: 9.5, leading: 12.2, align: "justify" });
         }
         groupIndex++;
       }
