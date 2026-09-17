@@ -630,7 +630,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         }
 
         if (entry.meta) block(entry.meta, { size: 9.4, color: MUTED, leading: 12.2 });
-        for (const detail of entry.details) block(detail, { size: 9.5, leading: 12.2 });
+        for (const detail of entry.details) block(detail, { size: 9.5, leading: 12.2, align: "justify" });
       });
       y += s(2);
     };
