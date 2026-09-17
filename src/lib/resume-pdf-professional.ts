@@ -317,7 +317,19 @@ export function groupSkills(names: SkillInput[]) {
   for (const label of explicitOrder) add(label, explicit.get(label) ?? []);
   // Fallback buckets only cover skills that arrived without a group of their own.
   for (const group of SKILL_GROUPS) add(group.label, inferred.get(group.label) ?? []);
-  if (other.length) add(ordered.length ? "Other Skills" : "Skills", other);
+  if (other.length) {
+    // Drop leftovers that merely restate skills already printed above — a
+    // run-together entry such as "JavaScript Tailwind CSS" adds nothing.
+    const listed = ordered.flatMap((entry) => entry.skills.map((skill) => skill.toLowerCase()));
+    const leftovers = other.filter((skill) => {
+      const lower = skill.toLowerCase();
+      const covered = listed.filter((known) => known !== lower && lower.includes(known));
+      if (covered.length < 2) return true;
+      const coverage = covered.reduce((total, known) => total + known.length, 0) / lower.length;
+      return coverage < 0.7;
+    });
+    if (leftovers.length) add(ordered.length ? "Other Skills" : "Skills", leftovers);
+  }
 
   // A skill already listed under an earlier group must not repeat further down.
   const seen = new Set<string>();
