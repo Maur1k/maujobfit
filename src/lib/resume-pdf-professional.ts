@@ -468,7 +468,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     const summaryItems = bySection("summary");
     if (summaryItems.length) {
       sectionHeading("Professional Summary", 26);
-      block(summaryItems.map((item) => item.statement.trim()).join(" "), { leading: 12.8, gap: 4 });
+      block(summaryItems.map((item) => item.statement.trim()).join(" "), { leading: 12.8, gap: 4, align: "justify" });
     }
 
     // ---------- Experience & Projects ----------
