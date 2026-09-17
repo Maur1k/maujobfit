@@ -233,10 +233,6 @@ const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   },
 ];
 
-// Broadly detects skills that are clearly tools/platforms so the fallback
-// bucket is labeled "Additional Tools" instead of plain "Additional".
-const ADDITIONAL_TOOLS_RE =
-  /git|github|gitlab|cPanel|codemagic|paymongo|vercel|netlify|postman|insomnia|docker|kubernetes|aws|azure|gcp|jira|figma|sketch|jenkins|circleci|travis|webpack|vite|rollup|wordpress|shopify|webflow|contentful|strapi|ci\/cd|tools?/i;
 
 export type SkillInput = string | { name: string; group?: string | null };
 
