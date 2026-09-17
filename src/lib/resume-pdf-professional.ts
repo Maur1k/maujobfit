@@ -86,6 +86,7 @@ function formatDate(value: string | null | undefined) {
 export function dateRange(start: string | null | undefined, end: string | null | undefined) {
   const from = formatDate(start);
   const to = formatDate(end);
+  if (from && to && from === to) return from;
   if (from && to) return `${from} – ${to}`;
   if (from) return `${from} – Present`;
   return to;
@@ -191,7 +192,7 @@ export function buildCertificationEntries(
     const record = item.evidenceIds.map(lookup).find(Boolean);
     const title = (item.heading || "").trim() || (record?.title || "").trim();
     const dates = record ? dateRange(record.start_date, record.end_date) : "";
-    const meta = [record?.organization?.trim(), dates].filter(Boolean).join("  ·  ");
+    const meta = [record?.organization?.trim(), dates].filter(Boolean).join(" · ");
 
     const key = `${normalizeEducationKey(title)}|${normalizeEducationKey(meta)}`;
     let entry = byKey.get(key);
