@@ -1,12 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateTailoredResume } from "@/lib/tailoring.functions";
-import { validateTailoredResume } from "@/lib/validation.functions";
+import {
+  proposeTailoredItemRewrite,
+  saveTailoredItem,
+  validateTailoredResume,
+} from "@/lib/validation.functions";
 import { classifyMasterSkills } from "@/lib/skill-relevance.functions";
 import { snapshotTailoredResume } from "@/lib/versions.functions";
 import { normaliseSettings } from "@/lib/tailoring-settings";
 import {
   TAILORED_ITEM_COLUMNS,
   TAILORED_RESUME_COLUMNS,
+  tailoredSectionLabel,
   type TailoredItemRow,
   type TailoredResumeRow,
   type TailoredSourceRow,
@@ -16,6 +21,7 @@ import {
   type ProEvidence,
   type ProItem,
 } from "@/lib/resume-pdf-professional";
+
 
 /**
  * One-click path: generate a tailored resume, run the claim check and render the
