@@ -214,6 +214,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
       if (subtitle) {
         children.push(
           new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
             keepNext: true,
             spacing: { after: 20 },
             children: [new TextRun({ text: subtitle, size: 19, color: MUTED })],
@@ -223,6 +224,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
       if (stack.length) {
         children.push(
           new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
             keepNext: true,
             spacing: { after: 40 },
             children: [
@@ -247,6 +249,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
     for (const group of grouped) {
       children.push(
         new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
           spacing: { after: 60, line: 280 },
           children: [
             new TextRun({ text: `${group.label}: `, bold: true, size: 19, color: INK }),
@@ -301,6 +304,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
       if (group.institution) {
         children.push(
           new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
             keepNext: true,
             spacing: { after: 20 },
             children: [new TextRun({ text: group.institution, size: 19, color: MUTED })],
@@ -332,6 +336,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
       if (entry.meta) {
         children.push(
           new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
             keepNext: true,
             spacing: { after: 20 },
             children: [new TextRun({ text: entry.meta, size: 19, color: MUTED })],

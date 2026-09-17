@@ -357,16 +357,16 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       const justify = opts.align === "justify";
       const lines = wrap(value, size, style, width);
       setFont(size, style, opts.color ?? INK);
-      for (const line of lines) {
+      lines.forEach((line, index) => {
         ensure(leading);
         setFont(size, style, opts.color ?? INK);
-        if (justify) {
+        if (justify && index < lines.length - 1) {
           doc.text(line, MARGIN_X + indent, y + s(size), { align: "justify", maxWidth: width });
         } else {
           doc.text(line, MARGIN_X + indent, y + s(size));
         }
         y += leading;
-      }
+      });
       y += s(opts.gap ?? 0);
     };
 
@@ -381,7 +381,12 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         ensure(leading);
         setFont(size, "normal");
         if (index === 0) doc.text("•", MARGIN_X + 2, y + s(size));
-        doc.text(line, MARGIN_X + indent, y + s(size), { align: "justify", maxWidth: width });
+        doc.text(
+          line,
+          MARGIN_X + indent,
+          y + s(size),
+          index < lines.length - 1 ? { align: "justify", maxWidth: width } : undefined,
+        );
         y += leading;
       });
       y += s(1);
@@ -525,9 +530,15 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           y += s(14.5);
         });
 
-        if (subtitle) block(subtitle, { size: 9.4, color: MUTED, leading: 12 });
+        if (subtitle) block(subtitle, { size: 9.4, color: MUTED, leading: 12, align: "justify" });
         if (stack.length)
-          block(stack.join(" · "), { size: 8.6, style: "italic", color: MUTED, leading: 11.5 });
+          block(stack.join(" · "), {
+            size: 8.6,
+            style: "italic",
+            color: MUTED,
+            leading: 11.5,
+            align: "justify",
+          });
         y += s(2);
 
         for (const item of groupItems) bullet(item.statement.trim());
@@ -544,20 +555,29 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       const grouped = groupSkills(skillItems.map((item) => item.statement.trim()).filter(Boolean));
       sectionHeading("Technical Skills", 24);
       for (const group of grouped) {
-        const labelText = `${group.label}: `;
-        setFont(9.5, "bold");
-        const labelWidth = doc.getTextWidth(labelText) + s(2);
-        const lines = wrap(group.skills.join(", "), 9.5, "normal", BODY_W - labelWidth);
+        const labelText = `${group.label}:`;
+        const skillText = group.skills.join(", ");
+        const lines = wrap(`${labelText} ${skillText}`, 9.5, "normal", BODY_W);
         const leading = s(13);
         ensure(leading * Math.min(lines.length, 2));
         lines.forEach((line, index) => {
           ensure(leading);
-          if (index === 0) {
+          if (index === 0 && line.startsWith(labelText)) {
             setFont(9.5, "bold");
             doc.text(labelText, MARGIN_X, y + s(9.5));
+            const labelWidth = doc.getTextWidth(`${labelText} `);
+            const remainder = line.slice(labelText.length).trimStart();
+            setFont(9.5, "normal");
+            doc.text(remainder, MARGIN_X + labelWidth, y + s(9.5));
+          } else {
+            setFont(9.5, "normal");
+            doc.text(
+              line,
+              MARGIN_X,
+              y + s(9.5),
+              index < lines.length - 1 ? { align: "justify", maxWidth: BODY_W } : undefined,
+            );
           }
-          setFont(9.5, "normal");
-          doc.text(line, MARGIN_X + labelWidth, y + s(9.5));
           y += leading;
         });
         y += s(0.5);
@@ -600,7 +620,8 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         if (groupIndex > 0) y += s(4);
         const degreeLine = [group.degree, group.date].filter(Boolean).join(" – ");
         if (degreeLine) block(degreeLine, { size: 10.5, style: "bold", leading: 13.6 });
-        if (group.institution) block(group.institution, { size: 9.4, color: MUTED, leading: 12.2 });
+        if (group.institution)
+          block(group.institution, { size: 9.4, color: MUTED, leading: 12.2, align: "justify" });
         for (const major of group.majors) {
           block(major, { size: 9.5, leading: 12.2, align: "justify" });
         }
@@ -629,7 +650,8 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           }
         }
 
-        if (entry.meta) block(entry.meta, { size: 9.4, color: MUTED, leading: 12.2 });
+        if (entry.meta)
+          block(entry.meta, { size: 9.4, color: MUTED, leading: 12.2, align: "justify" });
         for (const detail of entry.details) block(detail, { size: 9.5, leading: 12.2, align: "justify" });
       });
       y += s(2);
