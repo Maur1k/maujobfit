@@ -6,7 +6,7 @@ import { jsPDF } from "jspdf";
  * This renderer NEVER emits evidence ids, citation markers, validation status,
  * confidence, provenance, source text, banners or any other internal metadata.
  * It receives already-filtered content (supported claims only) and lays it out
- * as a clean, ATS-friendly single-column developer resume with selectable text.
+ * as a clean, LinkedIn-inspired, ATS-friendly single-column resume with selectable text.
  */
 
 export type ProProfile = {
@@ -393,18 +393,17 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     };
 
     const sectionHeading = (label: string, keepWith = 34) => {
-      if (y > MARGIN_Y + 2) y += s(6);
-      ensure(s(20 + keepWith));
+      if (y > MARGIN_Y + 2) y += s(7);
+      ensure(s(23 + keepWith));
       if (y <= MARGIN_Y + 2) y = MARGIN_Y;
-      setFont(9.6, "bold");
-      doc.setCharSpace(1.1);
-      doc.text(label.toUpperCase(), MARGIN_X, y + s(9.6));
-      doc.setCharSpace(0);
-      y += s(13);
-      doc.setDrawColor(RULE[0], RULE[1], RULE[2]);
-      doc.setLineWidth(0.7);
+      setFont(12, "bold");
+      doc.text(label, MARGIN_X, y + s(12));
+      y += s(16);
+      doc.setDrawColor(INK[0], INK[1], INK[2]);
+      doc.setLineWidth(1.15);
       doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
-      y += s(6.5);
+      doc.setLineWidth(0.7);
+      y += s(7);
     };
 
     const rightText = (
@@ -419,23 +418,19 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
 
     // ---------- Header ----------
     const name = (input.profile?.full_name || "").trim() || "Curriculum Vitae";
-    setFont(21, "bold");
-    doc.setCharSpace(0.4);
-    ensure(s(28));
-    doc.text(name, MARGIN_X, y + s(21));
-    doc.setCharSpace(0);
-    y += s(24);
+    setFont(24, "bold");
+    ensure(s(31));
+    doc.text(name, MARGIN_X, y + s(24));
+    y += s(28);
 
     const rawTarget = (input.jobTitle ?? "").trim();
     const target = (
       rawTarget.toLowerCase() === "untitled job" ? input.profile?.headline ?? "" : rawTarget || input.profile?.headline || ""
     ).trim();
     if (target) {
-      setFont(10.5, "bold", MUTED);
-      doc.setCharSpace(1.4);
-      doc.text(target.toUpperCase(), MARGIN_X, y + s(10.5));
-      doc.setCharSpace(0);
-      y += s(15);
+      setFont(12, "bold", MUTED);
+      doc.text(target, MARGIN_X, y + s(12));
+      y += s(17);
     }
 
     const contactPrimary = [
@@ -457,15 +452,15 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
 
     for (const line of [contactPrimary, contactSecondary]) {
       if (line.length === 0) continue;
-      block(line.join("   ·   "), { size: 9, color: MUTED, leading: 11.6 });
+      block(line.join("  •  "), { size: 9, color: MUTED, leading: 11.8 });
     }
 
-    y += s(4);
+    y += s(5);
     doc.setDrawColor(INK[0], INK[1], INK[2]);
-    doc.setLineWidth(1);
+    doc.setLineWidth(1.5);
     doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
     doc.setLineWidth(0.7);
-    y += s(10);
+    y += s(8);
 
     const bySection = (section: string) => input.items.filter((item) => item.section === section);
 
@@ -514,23 +509,24 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
             ? [...new Set(records.flatMap((r) => r.skills ?? []))].slice(0, 10)
             : [];
 
-        const headingLines = wrap(key, 11, "bold", BODY_W - (dates ? 96 : 0));
+        const headingLines = wrap(key, 11.2, "bold", BODY_W - (dates ? 96 : 0));
         const needed = s(
           headingLines.length * 14.5 + (subtitle ? 12 : 0) + (stack.length ? 12 : 0) + 30,
         );
         if (groupIndex > 0) y += s(4.5);
         ensure(needed);
 
-        setFont(11, "bold");
+        setFont(11.2, "bold");
         headingLines.forEach((line, index) => {
           ensure(s(14.5));
-          setFont(11, "bold");
-          doc.text(line, MARGIN_X, y + s(11));
-          if (index === 0 && dates) rightText(dates, y + s(11), 9, "italic");
+          setFont(11.2, "bold");
+          doc.text(line, MARGIN_X, y + s(11.2));
+          if (index === 0 && dates) rightText(dates, y + s(11.2), 9, "normal");
           y += s(14.5);
         });
 
-        if (subtitle) block(subtitle, { size: 9.4, color: MUTED, leading: 12, align: "justify" });
+        if (subtitle)
+          block(subtitle, { size: 9.4, style: "bold", color: MUTED, leading: 12, align: "justify" });
         if (stack.length)
           block(stack.join(" · "), {
             size: 8.6,

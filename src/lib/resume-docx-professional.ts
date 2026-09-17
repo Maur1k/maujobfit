@@ -26,7 +26,7 @@ import {
 /**
  * Recruiter-facing DOCX renderer.
  *
- * Mirrors the professional PDF structure exactly and, like it, NEVER emits evidence
+ * Mirrors the LinkedIn-inspired professional PDF structure and, like it, NEVER emits evidence
  * ids, citations, validation status, confidence, provenance, source text, banners or
  * any other internal metadata. It receives already-filtered content (supported claims
  * only) and stays fully editable in Microsoft Word and Google Docs: real heading
@@ -59,22 +59,21 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
 
   children.push(
     new Paragraph({
-      spacing: { after: 40 },
-      children: [new TextRun({ text: name, bold: true, size: 42, color: INK })],
+      spacing: { after: 50 },
+      children: [new TextRun({ text: name, bold: true, size: 48, color: INK })],
     }),
   );
 
   if (target) {
     children.push(
       new Paragraph({
-        spacing: { after: 80 },
+        spacing: { after: 90 },
         children: [
           new TextRun({
-            text: target.toUpperCase(),
+            text: target,
             bold: true,
-            size: 21,
+            size: 24,
             color: MUTED,
-            characterSpacing: 28,
           }),
         ],
       }),
@@ -103,7 +102,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
     children.push(
       new Paragraph({
         spacing: { after: index === 1 ? 60 : 20 },
-        children: [new TextRun({ text: line.join("   ·   "), size: 18, color: MUTED })],
+        children: [new TextRun({ text: line.join("  •  "), size: 18, color: MUTED })],
       }),
     );
   }
@@ -111,8 +110,8 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
   // horizontal rule under the header
   children.push(
     new Paragraph({
-      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: INK, space: 2 } },
-      spacing: { after: 160 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 18, color: INK, space: 2 } },
+      spacing: { after: 120 },
     }),
   );
 
@@ -121,14 +120,13 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
         border: ruleBorder(),
-        spacing: { before: 240, after: 120 },
+        spacing: { before: 220, after: 120 },
         children: [
           new TextRun({
-            text: label.toUpperCase(),
+            text: label,
             bold: true,
-            size: 20,
+            size: 24,
             color: INK,
-            characterSpacing: 22,
           }),
         ],
       }),
@@ -203,9 +201,9 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
             ? { tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }] }
             : {}),
           children: [
-            new TextRun({ text: key, bold: true, size: 22, color: INK }),
+            new TextRun({ text: key, bold: true, size: 23, color: INK }),
             ...(dates
-              ? [new TextRun({ text: `\t${dates}`, italics: true, size: 18, color: MUTED })]
+              ? [new TextRun({ text: `\t${dates}`, size: 18, color: MUTED })]
               : []),
           ],
         }),
@@ -217,7 +215,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
             alignment: AlignmentType.JUSTIFIED,
             keepNext: true,
             spacing: { after: 20 },
-            children: [new TextRun({ text: subtitle, size: 19, color: MUTED })],
+            children: [new TextRun({ text: subtitle, bold: true, size: 19, color: MUTED })],
           }),
         );
       }
@@ -362,7 +360,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
           basedOn: "Normal",
           next: "Normal",
           quickFormat: true,
-          run: { font: "Arial", size: 20, bold: true, color: INK },
+          run: { font: "Arial", size: 24, bold: true, color: INK },
           paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 0, keepNext: true },
         },
         {
@@ -371,7 +369,7 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
           basedOn: "Normal",
           next: "Normal",
           quickFormat: true,
-          run: { font: "Arial", size: 22, bold: true, color: INK },
+          run: { font: "Arial", size: 23, bold: true, color: INK },
           paragraph: { spacing: { before: 140, after: 20 }, outlineLevel: 1, keepNext: true },
         },
       ],
