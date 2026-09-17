@@ -130,6 +130,8 @@ export type CandidateInput = {
   label: string;
   text: string;
   skills: string[];
+  /** For skill candidates: the user's own Master Resume skill-group title, if any. */
+  skillGroup?: string | null;
   resumeItemId: string | null;
   resumeEvidenceId: string | null;
   evidenceIds: string[];
@@ -280,6 +282,7 @@ export function prioritiseCandidates(
     label: row.label,
     text: row.text,
     skills: row.skills,
+    skillGroup: row.skillGroup ?? null,
     resumeItemId: row.resumeItemId,
     resumeEvidenceId: row.resumeEvidenceId,
     evidenceIds: row.evidenceIds,

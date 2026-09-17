@@ -233,12 +233,16 @@ const SKILL_GROUPS: { label: string; match: RegExp }[] = [
   },
 ];
 
-// Broadly detects skills that are clearly tools/platforms so the fallback
-// bucket is labeled "Additional Tools" instead of plain "Additional".
-const ADDITIONAL_TOOLS_RE =
-  /git|github|gitlab|cPanel|codemagic|paymongo|vercel|netlify|postman|insomnia|docker|kubernetes|aws|azure|gcp|jira|figma|sketch|jenkins|circleci|travis|webpack|vite|rollup|wordpress|shopify|webflow|contentful|strapi|ci\/cd|tools?/i;
 
-export function groupSkills(names: string[]) {
+export type SkillInput = string | { name: string; group?: string | null };
+
+/**
+ * Groups skills for the Technical Skills section. When a skill arrives with the
+ * user's own Master Resume group title, that grouping wins (first-seen order, so
+ * job-relevant groups and skills lead). Skills without a group fall back to the
+ * regex buckets below. Group names and skills are de-duplicated case-insensitively.
+ */
+export function groupSkills(names: SkillInput[]) {
   const explicit = new Map<string, string[]>();
   const explicitOrder: string[] = [];
   const inferred = new Map<string, string[]>();
@@ -246,20 +250,42 @@ export function groupSkills(names: string[]) {
 
   const push = (map: Map<string, string[]>, label: string, values: string[]) => {
     const list = map.get(label) ?? [];
-    for (const value of values) if (value && !list.includes(value)) list.push(value);
+    for (const value of values) {
+      if (!value) continue;
+      if (!list.some((existing) => existing.toLowerCase() === value.toLowerCase())) list.push(value);
+    }
     map.set(label, list);
   };
 
-  for (const raw of names) {
-    const name = raw.trim();
+  const explicitKeys = new Map<string, string>();
+  const pushExplicit = (label: string, values: string[]) => {
+    const key = label.toLowerCase();
+    const canonical = explicitKeys.get(key);
+    if (canonical) {
+      push(explicit, canonical, values);
+      return;
+    }
+    explicitKeys.set(key, label);
+    explicitOrder.push(label);
+    push(explicit, label, values);
+  };
+
+  for (const entry of names) {
+    const raw = typeof entry === "string" ? entry : entry.name;
+    const name = (raw ?? "").trim();
+    if (!name) continue;
+
+    const ownGroup = typeof entry === "string" ? "" : (entry.group ?? "").trim();
+    if (ownGroup) {
+      // A skill whose name repeats its own group heading adds nothing to the line.
+      if (ownGroup.toLowerCase() !== name.toLowerCase()) pushExplicit(ownGroup, [name]);
+      continue;
+    }
     // "Databases (MySQL, PostgreSQL)" → an author-provided category with members
     const labelled = /^([^()]{2,40}?)\s*\(([^()]+)\)$/.exec(name);
     if (labelled) {
-      const label = labelled[1]!.trim();
-      if (!explicit.has(label)) explicitOrder.push(label);
-      push(
-        explicit,
-        label,
+      pushExplicit(
+        labelled[1]!.trim(),
         labelled[2]!
           .split(/[,;/]/)
           .map((value) => value.trim())
@@ -273,28 +299,51 @@ export function groupSkills(names: string[]) {
   }
 
   const ordered: { label: string; skills: string[] }[] = [];
-  for (const group of SKILL_GROUPS) {
-    const list = inferred.get(group.label);
-    if (list?.length) ordered.push({ label: group.label, skills: list });
-  }
-  for (const label of explicitOrder) {
-    const list = explicit.get(label);
-    if (!list?.length) continue;
+  const add = (label: string, skills: string[]) => {
+    if (skills.length === 0) return;
     const existing = ordered.find((entry) => entry.label.toLowerCase() === label.toLowerCase());
     if (existing) {
-      for (const value of list) if (!existing.skills.includes(value)) existing.skills.push(value);
-    } else {
-      ordered.push({ label, skills: list });
+      for (const value of skills) {
+        if (!existing.skills.some((skill) => skill.toLowerCase() === value.toLowerCase())) {
+          existing.skills.push(value);
+        }
+      }
+      return;
     }
-  }
+    ordered.push({ label, skills: [...skills] });
+  };
+
+  // The user's own group titles lead, in the order their skills were selected.
+  for (const label of explicitOrder) add(label, explicit.get(label) ?? []);
+  // Fallback buckets only cover skills that arrived without a group of their own.
+  for (const group of SKILL_GROUPS) add(group.label, inferred.get(group.label) ?? []);
   if (other.length) {
-    const hasToolLike = other.some((skill) => ADDITIONAL_TOOLS_RE.test(skill));
-    ordered.push({
-      label: ordered.length ? (hasToolLike ? "Additional Tools" : "Additional") : "Skills",
-      skills: other,
+    // Drop leftovers that merely restate skills already printed above — a
+    // run-together entry such as "JavaScript Tailwind CSS" adds nothing.
+    const listed = ordered.flatMap((entry) => entry.skills.map((skill) => skill.toLowerCase()));
+    const leftovers = other.filter((skill) => {
+      const lower = skill.toLowerCase();
+      const covered = listed.filter((known) => known !== lower && lower.includes(known));
+      if (covered.length < 2) return true;
+      const coverage = covered.reduce((total, known) => total + known.length, 0) / lower.length;
+      return coverage < 0.7;
     });
+    if (leftovers.length) add(ordered.length ? "Other Skills" : "Skills", leftovers);
   }
-  return ordered;
+
+  // A skill already listed under an earlier group must not repeat further down.
+  const seen = new Set<string>();
+  const deduped: { label: string; skills: string[] }[] = [];
+  for (const entry of ordered) {
+    const skills = entry.skills.filter((skill) => {
+      const key = skill.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if (skills.length) deduped.push({ label: entry.label, skills });
+  }
+  return deduped;
 }
 
 export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
@@ -548,7 +597,11 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     // ---------- Skills ----------
     const skillItems = bySection("skill");
     if (skillItems.length) {
-      const grouped = groupSkills(skillItems.map((item) => item.statement.trim()).filter(Boolean));
+      const grouped = groupSkills(
+        skillItems
+          .map((item) => ({ name: item.statement.trim(), group: (item.heading ?? "").trim() }))
+          .filter((entry) => entry.name),
+      );
       sectionHeading("Technical Skills", 24);
       for (const group of grouped) {
         const labelText = `${group.label}:`;
