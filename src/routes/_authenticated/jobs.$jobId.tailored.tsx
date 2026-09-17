@@ -653,8 +653,9 @@ function TailoredResumePage() {
                     Professional resume — application ready
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Recruiter-facing PDF for JobStreet, LinkedIn and direct applications. Clean
-                    single-column ATS-friendly layout with selectable text. Uses only the{" "}
+                    LinkedIn-style recruiter-facing PDF for JobStreet, LinkedIn and direct applications.
+                    Clean modern header, scannable sections and justified body text in a single-column
+                    ATS-friendly layout. Uses only the{" "}
                     {supportedItems.length} claim
                     {supportedItems.length === 1 ? "" : "s"} validated as <strong>supported</strong>{" "}
                     — no evidence IDs, citations, statuses or internal notes appear anywhere in it.
@@ -672,7 +673,7 @@ function TailoredResumePage() {
                     ) : (
                       <>
                         <Download className="size-4" aria-hidden />
-                        Download professional resume
+                        Download LinkedIn-style PDF
                       </>
                     )}
                   </Button>
@@ -690,12 +691,12 @@ function TailoredResumePage() {
                     ) : (
                       <>
                         <Download className="size-4" aria-hidden />
-                        Download Word (.docx)
+                        Download LinkedIn-style DOCX
                       </>
                     )}
                   </Button>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    The Word version mirrors the same layout and content, and stays fully editable
+                    The Word version mirrors the LinkedIn-style layout and content, and stays fully editable
                     in Microsoft Word and Google Docs.
                   </p>
                   {supportedItems.length === 0 ? (
