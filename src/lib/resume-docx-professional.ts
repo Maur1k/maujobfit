@@ -15,6 +15,7 @@ import {
   groupSkills,
   normalizeEducationKey,
   parseEducationItem,
+  resolveExperienceMetadata,
   type BuildProfessionalPdfInput,
   type ProEvidence,
   type ProItem,
@@ -166,12 +167,10 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
         .flatMap((item) => item.evidenceIds)
         .map((id) => input.evidence.get(id))
         .filter(Boolean) as ProEvidence[];
-      const record = records[0];
-      const dates = record ? dateRange(record.start_date, record.end_date) : "";
-      const experienceCompany = section === "experience" ? (record?.organization || "").trim() : "";
-      const experienceRole = section === "experience" ? (record?.role || record?.title || "").trim() : "";
-      const displayTitle = section === "experience" ? experienceCompany || key : key;
-      const subtitle = section === "experience" ? [experienceRole, dates].filter(Boolean).join(" | ") : "";
+      const experience = resolveExperienceMetadata(records);
+      const displayTitle = section === "experience" ? experience.company || key : key;
+      const subtitle =
+        section === "experience" ? [experience.role, experience.dates].filter(Boolean).join(" | ") : "";
 
       children.push(
         new Paragraph({

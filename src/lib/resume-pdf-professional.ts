@@ -92,6 +92,16 @@ export function dateRange(start: string | null | undefined, end: string | null |
   return to;
 }
 
+export function resolveExperienceMetadata(records: ProEvidence[]) {
+  const company = records.find((record) => record.organization?.trim())?.organization?.trim() ?? "";
+  const roleRecord = records.find((record) => record.role?.trim() || record.title?.trim());
+  const role = roleRecord?.role?.trim() || roleRecord?.title?.trim() || "";
+  const dateRecord = records.find((record) => record.start_date || record.end_date);
+  const dates = dateRecord ? dateRange(dateRecord.start_date, dateRecord.end_date) : "";
+
+  return { company, role, dates };
+}
+
 function educationYear(value: string | null | undefined) {
   if (!value) return null;
   const match = /\b(19|20)\d{2}\b/.exec(value);
@@ -535,14 +545,10 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           .flatMap((item) => item.evidenceIds)
           .map((id) => input.evidence.get(id))
           .filter(Boolean) as ProEvidence[];
-        const record = records[0];
-
-        const dates = record ? dateRange(record.start_date, record.end_date) : "";
-        const experienceCompany = section === "experience" ? (record?.organization || "").trim() : "";
-        const experienceRole = section === "experience" ? (record?.role || record?.title || "").trim() : "";
-        const displayTitle = section === "experience" ? experienceCompany || key : key;
+        const experience = resolveExperienceMetadata(records);
+        const displayTitle = section === "experience" ? experience.company || key : key;
         const subtitle =
-          section === "experience" ? [experienceRole, dates].filter(Boolean).join(" | ") : "";
+          section === "experience" ? [experience.role, experience.dates].filter(Boolean).join(" | ") : "";
 
         const headingLines = wrap(displayTitle, 10.6, "bold", BODY_W);
         const needed = s(
