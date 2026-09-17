@@ -52,15 +52,26 @@ export function QuickResumeButton({
       });
       downloadBlob(result.blob, result.fileName);
       await queryClient.invalidateQueries({ queryKey: ["tailored-resume", jobId, user.id] });
-      toast.success(
-        `Your resume is downloaded — ${result.checked} lines checked, ${result.includedCount} included.`,
-        {
-          description:
-            result.excludedCount > 0
-              ? `${result.excludedCount} line${result.excludedCount === 1 ? "" : "s"} could not be backed up by your own records, so they were left out. Open the detailed review to fix them.`
-              : "Every line is backed by a record you entered yourself.",
-        },
-      );
+      const notes = [
+        `${result.checked} lines checked, ${result.includedCount} included`,
+        result.repairedCount > 0
+          ? `${result.repairedCount} reworded to match your own records`
+          : null,
+        result.excludedCount > 0
+          ? `${result.excludedCount} left out because your records don't back them`
+          : null,
+        result.droppedSections.length > 0
+          ? `No line survived the check for: ${result.droppedSections.join(", ")}`
+          : null,
+      ].filter(Boolean) as string[];
+      toast.success("Your resume is downloaded.", {
+        description:
+          notes.join(". ") +
+          (result.excludedCount > 0 || result.droppedSections.length > 0
+            ? ". Open the detailed review to fix those lines."
+            : "."),
+      });
+
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "We couldn't finish your resume. Please try again.",
