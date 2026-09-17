@@ -251,5 +251,44 @@ export async function buildResumeInOneStep({
     checked: validated.checked ?? renderItems.length,
     includedCount: renderItems.length,
     excludedCount: items.length - renderItems.length,
+    repairedCount,
+    droppedSections,
   };
 }
+
+/**
+ * Restates flagged lines from their own cited records and re-checks each one.
+ * Returns how many lines came back clean. Failures are ignored: the line simply
+ * stays flagged and is left out of the export, exactly as before.
+ */
+async function repairFlaggedItems(
+  tailoredResumeId: string,
+  onStep?: (step: QuickResumeStep) => void,
+) {
+  const { data: rows, error } = await supabase
+    .from("tailored_resume_items")
+    .select("id, section, validation_status, sort_order")
+    .eq("tailored_resume_id", tailoredResumeId)
+    .neq("validation_status", "supported")
+    .order("sort_order", { ascending: true });
+  if (error || !rows || rows.length === 0) return 0;
+
+  const flagged = (rows as { id: string; section: string }[]).slice(0, REPAIR_LIMIT);
+  onStep?.("repairing");
+
+  let repaired = 0;
+  for (const row of flagged) {
+    try {
+      const proposal = await proposeTailoredItemRewrite({ data: { itemId: row.id } });
+      if (!proposal.ok || !proposal.possible) continue;
+      const statement = proposal.statement.trim();
+      if (statement.length < 3) continue;
+      const saved = await saveTailoredItem({ data: { itemId: row.id, statement } });
+      if (saved.ok && saved.status === "supported") repaired += 1;
+    } catch {
+      // A line we cannot repair stays flagged and is left out of the file.
+    }
+  }
+  return repaired;
+}
+
