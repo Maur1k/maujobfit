@@ -382,7 +382,8 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
       if (ids.length === 0) continue;
       drafts.push({
         section: "skill",
-        heading: null,
+        // Carries the user's own Master Resume skill-group title so exports keep their grouping.
+        heading: candidate.skillGroup?.trim() || null,
         statement: candidate.label,
         rationale: candidate.rationale,
         confidence: candidate.priority === "high" ? 0.9 : 0.75,
