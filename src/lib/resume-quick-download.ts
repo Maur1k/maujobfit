@@ -39,6 +39,7 @@ export type QuickResumeStep =
   | "idle"
   | "generating"
   | "validating"
+  | "repairing"
   | "rendering"
   | "done";
 
@@ -49,7 +50,14 @@ export type QuickResumeResult = {
   checked: number;
   includedCount: number;
   excludedCount: number;
+  repairedCount: number;
+  /** Sections that ended up with nothing printable after the claim check. */
+  droppedSections: string[];
 };
+
+/** Max flagged lines we try to repair in one press, to keep the wait reasonable. */
+const REPAIR_LIMIT = 12;
+
 
 type Options = {
   jobId: string;
