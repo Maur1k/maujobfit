@@ -354,12 +354,17 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       const indent = opts.indent ?? 0;
       const width = opts.width ?? BODY_W - indent;
       const leading = s(opts.leading ?? size * 1.34);
+      const justify = opts.align === "justify";
       const lines = wrap(value, size, style, width);
       setFont(size, style, opts.color ?? INK);
       for (const line of lines) {
         ensure(leading);
         setFont(size, style, opts.color ?? INK);
-        doc.text(line, MARGIN_X + indent, y + s(size));
+        if (justify) {
+          doc.text(line, MARGIN_X + indent, y + s(size), { align: "justify", maxWidth: width });
+        } else {
+          doc.text(line, MARGIN_X + indent, y + s(size));
+        }
         y += leading;
       }
       y += s(opts.gap ?? 0);
@@ -368,14 +373,15 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     const bullet = (value: string) => {
       const size = 9.7;
       const indent = 12;
+      const width = BODY_W - indent;
       const leading = s(size * 1.36);
-      const lines = wrap(value, size, "normal", BODY_W - indent);
+      const lines = wrap(value, size, "normal", width);
       ensure(leading * Math.min(lines.length, 2));
       lines.forEach((line, index) => {
         ensure(leading);
         setFont(size, "normal");
         if (index === 0) doc.text("•", MARGIN_X + 2, y + s(size));
-        doc.text(line, MARGIN_X + indent, y + s(size));
+        doc.text(line, MARGIN_X + indent, y + s(size), { align: "justify", maxWidth: width });
         y += leading;
       });
       y += s(1);
