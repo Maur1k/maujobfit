@@ -60,7 +60,20 @@ const INK: [number, number, number] = [0, 0, 0];
 const MUTED: [number, number, number] = [0, 0, 0];
 const RULE: [number, number, number] = [176, 176, 184];
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -88,7 +101,6 @@ export function educationDate(record: ProEvidence | undefined) {
   if (!record) return "";
   const startYear = educationYear(record.start_date);
   const endYear = educationYear(record.end_date);
-  if (startYear && endYear) return `${startYear} – ${endYear}`;
   if (endYear) return `Batch ${endYear}`;
   if (startYear) return `${startYear} – Present`;
   return "";
@@ -349,8 +361,8 @@ export function groupSkills(names: SkillInput[]) {
 export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
   const paperSize = input.paperSize ?? "a4";
   const { width: PAGE_W, height: PAGE_H } = PAGE_DIMENSIONS[paperSize];
-  const MARGIN_X = 48;
-  const MARGIN_Y = 40;
+  const MARGIN_X = 36;
+  const MARGIN_Y = 28;
   const BODY_W = PAGE_W - MARGIN_X * 2;
 
   const renderDoc = (scale = 1.0) => {
@@ -398,7 +410,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         align?: "left" | "justify";
       } = {},
     ) => {
-      const size = opts.size ?? 9.7;
+      const size = opts.size ?? 9.4;
       const style = opts.style ?? "normal";
       const indent = opts.indent ?? 0;
       const width = opts.width ?? BODY_W - indent;
@@ -420,10 +432,10 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     };
 
     const bullet = (value: string) => {
-      const size = 9.7;
-      const indent = 12;
+      const size = 9.1;
+      const indent = 13;
       const width = BODY_W - indent;
-      const leading = s(size * 1.36);
+      const leading = s(size * 1.26);
       const lines = wrap(value, size, "normal", width);
       ensure(leading * Math.min(lines.length, 2));
       lines.forEach((line, index) => {
@@ -438,56 +450,44 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         );
         y += leading;
       });
-      y += s(1);
+      y += s(0.2);
     };
 
     const sectionHeading = (label: string, keepWith = 34) => {
-      if (y > MARGIN_Y + 2) y += s(7);
-      ensure(s(23 + keepWith));
+      if (y > MARGIN_Y + 2) y += s(8);
+      ensure(s(20 + keepWith));
       if (y <= MARGIN_Y + 2) y = MARGIN_Y;
-      setFont(12, "bold");
-      doc.text(label, MARGIN_X, y + s(12));
-      y += s(16);
-      doc.setDrawColor(INK[0], INK[1], INK[2]);
-      doc.setLineWidth(1.15);
+      setFont(11.8, "bold");
+      doc.text(label, MARGIN_X, y + s(11.8));
+      y += s(15);
+      doc.setDrawColor(RULE[0], RULE[1], RULE[2]);
+      doc.setLineWidth(0.65);
       doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
-      doc.setLineWidth(0.7);
-      y += s(7);
-    };
-
-    const rightText = (
-      value: string,
-      baselineY: number,
-      size: number,
-      style: "normal" | "italic" = "normal",
-    ) => {
-      setFont(size, style, MUTED);
-      doc.text(value, PAGE_W - MARGIN_X, baselineY, { align: "right" });
+      doc.setDrawColor(INK[0], INK[1], INK[2]);
+      y += s(10);
     };
 
     // ---------- Header ----------
     const name = (input.profile?.full_name || "").trim() || "Curriculum Vitae";
     setFont(24, "bold");
-    ensure(s(31));
+    ensure(s(29));
     doc.text(name, MARGIN_X, y + s(24));
-    y += s(28);
+    y += s(26);
 
     const rawTarget = (input.jobTitle ?? "").trim();
     const target = (
       rawTarget.toLowerCase() === "untitled job" ? input.profile?.headline ?? "" : rawTarget || input.profile?.headline || ""
     ).trim();
     if (target) {
-      setFont(12, "bold", MUTED);
-      doc.text(target, MARGIN_X, y + s(12));
-      y += s(17);
+      setFont(10.8, "bold", MUTED);
+      doc.text(target, MARGIN_X, y + s(10.8));
+      y += s(12.5);
     }
 
-    const contactPrimary = [
+    const contact = [
+      input.profile?.location,
       input.profile?.email,
       input.profile?.phone,
-      input.profile?.location,
-    ].filter(Boolean) as string[];
-    const contactSecondary = [
       input.profile?.linkedin_url,
       input.profile?.github_url,
       input.profile?.portfolio_url,
@@ -499,17 +499,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           .replace(/\/$/, ""),
       );
 
-    for (const line of [contactPrimary, contactSecondary]) {
-      if (line.length === 0) continue;
-      block(line.join("  •  "), { size: 9, color: MUTED, leading: 11.8 });
-    }
-
-    y += s(5);
-    doc.setDrawColor(INK[0], INK[1], INK[2]);
-    doc.setLineWidth(1.5);
-    doc.line(MARGIN_X, y, PAGE_W - MARGIN_X, y);
-    doc.setLineWidth(0.7);
-    y += s(8);
+    if (contact.length) block(contact.join(" • "), { size: 8.8, color: MUTED, leading: 10.6, gap: 2 });
 
     const bySection = (section: string) => input.items.filter((item) => item.section === section);
 
@@ -517,7 +507,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     const summaryItems = bySection("summary");
     if (summaryItems.length) {
       sectionHeading("Professional Summary", 26);
-      block(summaryItems.map((item) => item.statement.trim()).join(" "), { leading: 12.8, gap: 4, align: "justify" });
+      block(summaryItems.map((item) => item.statement.trim()).join(" "), { size: 9.2, leading: 11.6, gap: 1, align: "justify" });
     }
 
     // ---------- Experience & Projects ----------
@@ -547,44 +537,30 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         const record = records[0];
 
         const dates = record ? dateRange(record.start_date, record.end_date) : "";
+        const experienceCompany = section === "experience" ? (record?.organization || "").trim() : "";
+        const experienceRole = section === "experience" ? (record?.role || record?.title || "").trim() : "";
+        const displayTitle = section === "experience" ? experienceCompany || key : key;
         const subtitle =
-          section === "experience"
-            ? [record?.organization, record?.title]
-                .filter((value) => value && !key.includes(value))
-                .join(" · ")
-            : "";
-        const stack =
-          section === "project"
-            ? [...new Set(records.flatMap((r) => r.skills ?? []))].slice(0, 10)
-            : [];
+          section === "experience" ? [experienceRole, dates].filter(Boolean).join(" | ") : "";
 
-        const headingLines = wrap(key, 11.2, "bold", BODY_W - (dates ? 96 : 0));
+        const headingLines = wrap(displayTitle, 10.6, "bold", BODY_W);
         const needed = s(
-          headingLines.length * 14.5 + (subtitle ? 12 : 0) + (stack.length ? 12 : 0) + 30,
+          headingLines.length * 12.8 + (subtitle ? 11.4 : 0) + 25,
         );
-        if (groupIndex > 0) y += s(4.5);
+        if (groupIndex > 0) y += s(5);
         ensure(needed);
 
-        setFont(11.2, "bold");
+        setFont(10.6, "bold");
         headingLines.forEach((line, index) => {
-          ensure(s(14.5));
-          setFont(11.2, "bold");
-          doc.text(line, MARGIN_X, y + s(11.2));
-          if (index === 0 && dates) rightText(dates, y + s(11.2), 9, "normal");
-          y += s(14.5);
+          ensure(s(12.8));
+          setFont(10.6, "bold");
+          doc.text(line, MARGIN_X, y + s(10.6));
+          y += s(12.8);
         });
 
         if (subtitle)
-          block(subtitle, { size: 9.4, style: "bold", color: MUTED, leading: 12, align: "justify" });
-        if (stack.length)
-          block(stack.join(" · "), {
-            size: 8.6,
-            style: "italic",
-            color: MUTED,
-            leading: 11.5,
-            align: "justify",
-          });
-        y += s(2);
+          block(subtitle, { size: 9, color: MUTED, leading: 10.8, gap: 1, align: "justify" });
+        y += s(0.5);
 
         for (const item of groupItems) bullet(item.statement.trim());
       });
@@ -606,29 +582,29 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       for (const group of grouped) {
         const labelText = `${group.label}:`;
         const skillText = group.skills.join(", ");
-        const lines = wrap(`${labelText} ${skillText}`, 9.5, "normal", BODY_W);
-        const leading = s(13);
+        const lines = wrap(`${labelText} ${skillText}`, 9.1, "normal", BODY_W);
+        const leading = s(11.5);
         ensure(leading * Math.min(lines.length, 2));
         lines.forEach((line, index) => {
           ensure(leading);
           if (index === 0 && line.startsWith(labelText)) {
-            setFont(9.5, "bold");
-            doc.text(labelText, MARGIN_X, y + s(9.5));
+            setFont(9.1, "bold");
+            doc.text(labelText, MARGIN_X, y + s(9.1));
             const labelWidth = doc.getTextWidth(labelText) + s(3);
             const remainder = line.slice(labelText.length).trimStart();
-            setFont(9.5, "normal");
+            setFont(9.1, "normal");
             doc.text(
               remainder,
               MARGIN_X + labelWidth,
-              y + s(9.5),
+              y + s(9.1),
               lines.length > 1 ? { align: "justify", maxWidth: BODY_W - labelWidth } : undefined,
             );
           } else {
-            setFont(9.5, "normal");
+            setFont(9.1, "normal");
             doc.text(
               line,
               MARGIN_X,
-              y + s(9.5),
+              y + s(9.1),
               index < lines.length - 1 ? { align: "justify", maxWidth: BODY_W } : undefined,
             );
           }
@@ -673,11 +649,11 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
       for (const group of groups.values()) {
         if (groupIndex > 0) y += s(4);
         const degreeLine = [group.degree, group.date].filter(Boolean).join(" – ");
-        if (degreeLine) block(degreeLine, { size: 10.5, style: "bold", leading: 13.6 });
+        if (degreeLine) block(degreeLine, { size: 9.8, style: "bold", leading: 11.8 });
         if (group.institution)
-          block(group.institution, { size: 9.4, color: MUTED, leading: 12.2, align: "justify" });
+          block(group.institution, { size: 9.1, color: MUTED, leading: 10.9, align: "justify" });
         for (const major of group.majors) {
-          block(major, { size: 9.5, leading: 12.2, align: "justify" });
+          block(major, { size: 9.1, leading: 10.9, align: "justify" });
         }
         groupIndex++;
       }
@@ -695,18 +671,18 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
         if (entryIndex > 0) y += s(4);
 
         if (entry.title) {
-          const headingLines = wrap(entry.title, 10.5, "bold", BODY_W);
+          const headingLines = wrap(entry.title, 9.8, "bold", BODY_W);
           for (const line of headingLines) {
-            ensure(s(13.6));
-            setFont(10.5, "bold");
-            doc.text(line, MARGIN_X, y + s(10.5));
-            y += s(13.6);
+            ensure(s(11.8));
+            setFont(9.8, "bold");
+            doc.text(line, MARGIN_X, y + s(9.8));
+            y += s(11.8);
           }
         }
 
         if (entry.meta)
-          block(entry.meta, { size: 9.4, color: MUTED, leading: 12.2, align: "justify" });
-        for (const detail of entry.details) block(detail, { size: 9.5, leading: 12.2, align: "justify" });
+          block(entry.meta, { size: 9.1, color: MUTED, leading: 10.9, align: "justify" });
+        for (const detail of entry.details) block(detail, { size: 9.1, leading: 10.9, align: "justify" });
       });
       y += s(2);
     };
@@ -723,7 +699,7 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
 
   // If onePage is requested, automatically micro-scale down if content overflowed onto page 2
   if (input.onePage && doc.getNumberOfPages() > 1) {
-    const scaleSteps = [0.97, 0.94, 0.91, 0.88, 0.85, 0.82];
+    const scaleSteps = [0.98, 0.96, 0.94, 0.92, 0.9, 0.88, 0.86, 0.84, 0.82];
     for (const step of scaleSteps) {
       const scaledDoc = renderDoc(step);
       if (scaledDoc.getNumberOfPages() === 1) {
