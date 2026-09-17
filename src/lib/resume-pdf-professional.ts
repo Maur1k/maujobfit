@@ -585,7 +585,11 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
     // ---------- Skills ----------
     const skillItems = bySection("skill");
     if (skillItems.length) {
-      const grouped = groupSkills(skillItems.map((item) => item.statement.trim()).filter(Boolean));
+      const grouped = groupSkills(
+        skillItems
+          .map((item) => ({ name: item.statement.trim(), group: (item.heading ?? "").trim() }))
+          .filter((entry) => entry.name),
+      );
       sectionHeading("Technical Skills", 24);
       for (const group of grouped) {
         const labelText = `${group.label}:`;
