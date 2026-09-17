@@ -89,11 +89,21 @@ export function normaliseForCompare(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9%.]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Both sides are reduced to the same digit form before comparing, so a figure
+ * written as "60,000+" in the evidence still matches the figure "60,000" taken
+ * from the claim. Without this, thousands separators made identical numbers look
+ * like invented ones and the claim was wrongly flagged.
+ */
 export function containsMetric(haystack: string, metric: string): boolean {
-  const bare = metric.replace(/[%x]$/i, "");
-  const normalised = normaliseForCompare(haystack);
-  return normalised.includes(metric) || normalised.includes(bare);
+  const canon = (text: string) => text.toLowerCase().replace(/[^a-z0-9%.]+/g, "");
+  const needle = canon(metric);
+  if (!needle) return true;
+  const bare = needle.replace(/[%x]$/i, "");
+  const hay = canon(haystack);
+  return hay.includes(needle) || (bare.length > 0 && hay.includes(bare));
 }
+
 
 const STOPWORDS = new Set([
   "the","and","for","with","that","this","from","into","over","using","used","use","have","has","had",
