@@ -565,10 +565,15 @@ export function buildProfessionalResumePdf(input: BuildProfessionalPdfInput) {
           if (index === 0 && line.startsWith(labelText)) {
             setFont(9.5, "bold");
             doc.text(labelText, MARGIN_X, y + s(9.5));
-            const labelWidth = doc.getTextWidth(`${labelText} `);
+            const labelWidth = doc.getTextWidth(labelText) + s(3);
             const remainder = line.slice(labelText.length).trimStart();
             setFont(9.5, "normal");
-            doc.text(remainder, MARGIN_X + labelWidth, y + s(9.5));
+            doc.text(
+              remainder,
+              MARGIN_X + labelWidth,
+              y + s(9.5),
+              lines.length > 1 ? { align: "justify", maxWidth: BODY_W - labelWidth } : undefined,
+            );
           } else {
             setFont(9.5, "normal");
             doc.text(
