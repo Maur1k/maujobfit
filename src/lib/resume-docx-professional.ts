@@ -137,12 +137,14 @@ export function buildProfessionalResumeDocx(input: BuildProfessionalPdfInput) {
 
   const bodyParagraph = (text: string) =>
     new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
       spacing: { after: 100, line: 300 },
       children: [new TextRun({ text, size: 20, color: INK })],
     });
 
   const bulletParagraph = (text: string) =>
     new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
       numbering: { reference: "resume-bullets", level: 0 },
       spacing: { after: 60, line: 290 },
       children: [new TextRun({ text, size: 20, color: INK })],
