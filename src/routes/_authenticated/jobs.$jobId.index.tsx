@@ -292,6 +292,8 @@ function JobDetail() {
         ) : null}
       </div>
 
+      <AdvancedJobTools jobId={job.id} />
+
       {job.analysis_status === "failed" && job.error_message ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
           <p className="flex items-center gap-2 font-medium text-destructive">
