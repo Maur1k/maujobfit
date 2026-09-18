@@ -11,6 +11,7 @@ import {
   severityFor,
   type ValidationStatus,
 } from "@/lib/validation";
+import { assessBulletStructure } from "@/lib/resume-writing";
 
 const aiSchema = z.object({
   results: z
@@ -51,7 +52,10 @@ const REWRITE_PROMPT = `You rewrite a single flagged resume claim so that it is 
 Absolute rules:
 - Use ONLY facts present in the supplied evidence. Never add employers, tools, metrics, dates, scope or achievements.
 - Remove any wording the evidence does not substantiate instead of guessing or softening it into a vaguer claim that is still unsupported.
-- Keep the candidate's own terminology. Keep it to one sentence (two for a summary), strong verb first.
+- Keep the candidate's own terminology.
+- For a summary: write a confident, role-specific 2–3 sentence value pitch. Lead with the strongest verified differentiator and connect proven technologies and outcomes to the target role. Avoid clichés, adjective-led claims and bare skill lists.
+- For experience or project content: write one concise sentence in natural Action–Result–Reflection order. Open with a strong verb and specific work; state the verified outcome, delivered capability or metric; close with why it mattered, but only when that significance appears in the evidence. Never show the three labels. If the evidence cannot support a distinct reflection, preserve the strongest fully supported Action–Result sentence.
+- For all other sections: keep it to one concise sentence.
 - If nothing defensible remains after removing unsupported wording, set possible to false.
 - removed: list the specific phrases you dropped and why they were dropped.
 Return ONLY JSON: {"possible":true,"statement":"","removed":[""],"rationale":""}`;
@@ -196,6 +200,13 @@ function deterministicAssessment(
       spans.push(...missingParts);
       ceiling = capStatus(ceiling, "partially_supported");
     }
+  }
+
+  if (item.section === "experience" || item.section === "project") {
+    const structure = assessBulletStructure(item.statement);
+    if (!structure.action) issues.push("missing_action");
+    if (!structure.result) issues.push("missing_result");
+    if (!structure.reflection) issues.push("missing_reflection");
   }
 
   const ratio = corpus ? overlapRatio(item.statement, corpus) : 0;
