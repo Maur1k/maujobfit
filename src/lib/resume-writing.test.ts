@@ -1,0 +1,31 @@
+import assert from "node:assert/strict";
+import { describe, test } from "node:test";
+
+import { assessBulletStructure } from "./resume-writing";
+
+describe("assessBulletStructure", () => {
+  test("recognises an integrated Action–Result–Reflection bullet", () => {
+    assert.deepEqual(
+      assessBulletStructure(
+        "Rebuilt the dispatch platform on Node.js and MySQL, enabling reliable operations and improving delivery for the support team.",
+      ),
+      { action: true, result: true, reflection: true },
+    );
+  });
+
+  test("flags a responsibility-only statement", () => {
+    assert.deepEqual(assessBulletStructure("Worked on the customer mobile application."), {
+      action: false,
+      result: false,
+      reflection: false,
+    });
+  });
+
+  test("does not mistake a strong action for a complete reflection", () => {
+    assert.deepEqual(assessBulletStructure("Developed the customer mobile application for iOS and Android."), {
+      action: true,
+      result: false,
+      reflection: false,
+    });
+  });
+});

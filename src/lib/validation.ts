@@ -23,6 +23,9 @@ export const validationIssueLabel: Record<string, string> = {
   timeframe_mismatch: "Timeframe is not supported by the cited evidence",
   overstatement: "Scope or seniority is stronger than the evidence shows",
   weak_overlap: "Little of the wording traces back to the cited evidence",
+  missing_action: "Bullet does not open with a strong, specific action",
+  missing_result: "Bullet does not state a clear result or delivered outcome",
+  missing_reflection: "Bullet does not explain why the result mattered",
   ai_unavailable: "Automated language check could not run — deterministic checks only",
 };
 

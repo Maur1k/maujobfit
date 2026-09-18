@@ -265,15 +265,32 @@ async function repairFlaggedItems(
   tailoredResumeId: string,
   onStep?: (step: QuickResumeStep) => void,
 ) {
-  const { data: rows, error } = await supabase
-    .from("tailored_resume_items")
-    .select("id, section, validation_status, sort_order")
-    .eq("tailored_resume_id", tailoredResumeId)
-    .neq("validation_status", "supported")
-    .order("sort_order", { ascending: true });
-  if (error || !rows || rows.length === 0) return 0;
+  const [itemsResult, validationsResult] = await Promise.all([
+    supabase
+      .from("tailored_resume_items")
+      .select("id, section, validation_status, sort_order")
+      .eq("tailored_resume_id", tailoredResumeId)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("validation_results")
+      .select("tailored_resume_item_id, status, issues")
+      .eq("tailored_resume_id", tailoredResumeId),
+  ]);
+  if (itemsResult.error || validationsResult.error || !itemsResult.data) return 0;
 
-  const flagged = (rows as { id: string; section: string }[]).slice(0, REPAIR_LIMIT);
+  const qualityIssues = new Set(["missing_action", "missing_result", "missing_reflection"]);
+  const needsWritingRepair = new Set(
+    (validationsResult.data ?? [])
+      .filter((validation) =>
+        (validation.issues ?? []).some((issue: string) => qualityIssues.has(issue)),
+      )
+      .map((validation) => validation.tailored_resume_item_id)
+      .filter((itemId): itemId is string => Boolean(itemId)),
+  );
+  const flagged = (itemsResult.data as { id: string; section: string; validation_status: string }[])
+    .filter((row) => row.validation_status !== "supported" || needsWritingRepair.has(row.id))
+    .slice(0, REPAIR_LIMIT);
+  if (flagged.length === 0) return 0;
   onStep?.("repairing");
 
   let repaired = 0;

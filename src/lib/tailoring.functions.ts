@@ -56,8 +56,8 @@ Absolute rules:
 - Reuse the evidence's own facts and numbers; you may compress and reorder wording only.
 - Every item must cite at least one evidence id from the supplied list; items you cannot ground must be omitted.
 - Cover EVERY listed experience group and EVERY listed project group that appears in the catalogue, in the order given.
-- experience/projects: one achievement per item, one sentence, strong verb first, heading must be copied EXACTLY from the group's "group:" label.
-- summary: grounded in the summary evidence and the highest priority experience.
+- experience/projects: one achievement per item, one concise sentence, heading copied EXACTLY from the group's "group:" label. Write each sentence in natural Action–Result–Reflection order: open with a strong verb and specific work performed; state the verified outcome, delivered capability or metric; close with the evidence-backed significance of that outcome. Never show Action/Result/Reflection labels. Never invent a result or significance. If the evidence cannot support a distinct reflection, write the strongest fully supported Action–Result sentence instead.
+- summary: write a confident, ambitious 2–3 sentence value pitch grounded in the summary evidence and highest-priority experience. Begin with the exact target role (for example, "Application Developer with...") and the candidate's strongest verified differentiator; do not begin with a degree, education status or a different role. Then connect proven technologies and outcomes to the employer's needs. Avoid generic openings, adjective-led claims, clichés such as "results-driven" or "passionate professional", bare skill lists, and copied job-description language.
 Return ONLY JSON:
 {"summary":{"statement":"","evidence_ids":[],"rationale":"","confidence":0.8},"experience":[{"heading":"","statement":"","evidence_ids":[],"rationale":"","confidence":0.8}],"projects":[]}`;
 
@@ -190,7 +190,7 @@ export const generateTailoredResume = createServerFn({ method: "POST" })
                 role: "user",
                 content: [
                   `Target role: ${job.title}${job.company ? ` at ${job.company}` : ""}${job.seniority ? ` (${job.seniority})` : ""}`,
-                  `Composition settings: length=${resumeLengthLabel[settings.resume_length]}, level=${tailoringLevelLabel[settings.tailoring_level]}, skills=${skillsScopeLabel[settings.skills_scope]}. Summary target: ${budget.summarySentences}. Up to ${budget.experienceBullets} bullets per experience group and ${budget.projectBullets} per project.`,
+                  `Composition settings: length=${resumeLengthLabel[settings.resume_length]}, level=${tailoringLevelLabel[settings.tailoring_level]}, skills=${skillsScopeLabel[settings.skills_scope]}. Summary target: 2–3 concise sentences. Up to ${budget.experienceBullets} bullets per experience group and ${budget.projectBullets} per project.`,
                   `\nStructured job requirements:\n${requirementBlock}`,
                   `\nSummary evidence:\n${summaryBlock}`,
                   `\nApproved evidence catalogue (the ONLY permitted source of facts — keep every group):\n${catalogue}`,
